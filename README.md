@@ -1,6 +1,6 @@
 # Benchmark Report
 
-Benchmark Report is a planned Go CLI and GitHub Action for comparing Go and Criterion benchmark runs, producing configurable reports, and reproducing CI reports locally. This directory contains the implementation specification. No CLI, action, or release exists yet. Command examples describe the intended interface.
+Benchmark Report provides a composite GitHub Action that publishes a prepared Markdown report through `sticky-pull-request-comment`. The Go CLI for comparison, configurable rendering, and local reproduction is planned; it is not implemented or released yet. CLI examples describe the intended interface.
 
 See [output examples](docs/output-examples.md) for Go and Criterion reports, a compact report, allocation and throughput tables, and history JSON.
 
@@ -16,7 +16,7 @@ Existing tools cover parts of this workflow:
 | [gobenchdata](https://github.com/bobheadxi/gobenchdata) | Go CLI, Go benchmark processing, history and visualization | Its documented input is Go benchmark output; it does not provide the required shared Go/Criterion report interface. |
 | Current repository scripts | Existing package tables, Criterion aggregation, comment updates | Repository-specific assumptions and separate implementations must be maintained twice. |
 
-These gaps justify a shared parser, comparison model, renderer, and publisher. They do not justify rebuilding a chart dashboard. The language of an existing action is not a reason to replace it.
+These gaps justify a shared parser, comparison model, and renderer. Comment publication is delegated to [sticky-pull-request-comment](https://github.com/marocchino/sticky-pull-request-comment); historical storage and charts remain with github-action-benchmark. The language of an existing action is not a reason to replace it.
 
 The assessment of `github-action-benchmark` is based on its [action inputs](https://github.com/benchmark-action/github-action-benchmark/blob/master/action.yml), [Markdown renderer](https://github.com/benchmark-action/github-action-benchmark/blob/master/src/write.ts), and [package definition](https://github.com/benchmark-action/github-action-benchmark/blob/master/package.json), inspected on 2026-10-03. Recheck these interfaces before implementing the integration.
 
@@ -27,20 +27,35 @@ flowchart LR
     A[Go or Criterion output] --> B[Go normalization and comparison]
     B --> C[Configured Markdown report]
     B --> D[Absolute measurements as JSON]
-    C --> E[PR comment and job summary]
+    C --> E[Job summary]
+    C --> H[sticky-pull-request-comment]
+    H --> I[PR comment]
     D --> F[github-action-benchmark]
     F --> G[History on GitHub Pages]
 ```
 
-On a pull request, the consumer workflow runs both revisions with one toolchain on the same runner for each suite. Benchmark Report creates the report and updates a single comment. Fork PRs receive a job summary and downloadable artifacts by default.
+On a pull request, the consumer workflow runs both revisions with one toolchain on the same runner for each suite. The planned generator creates the report; the existing composite action writes the summary and delegates comment updates. Fork PRs receive a job summary, with artifacts uploaded by the caller.
 
 On a push to the primary branch, the workflow measures the accepted commit and exports absolute measurements to `github-action-benchmark`. That action owns historical storage and charts. Its comments, summaries, and failure alerts are disabled in this integration so that report policy has one owner. History publication is optional.
 
 Each repository retains its build commands, toolchain selection, change detection, suite matrix, and caching. The shared action consumes completed measurements. The Go-specific change detector in `go-socket.io` stays in that repository.
 
-## Local use
+## Publish an existing report
 
-The planned CLI separates computation from publication:
+After generating or downloading `benchmark-report.md`, call the root action in a publishing job with `pull-requests: write`. Replace the revision placeholder with a reviewed commit containing the action.
+
+```yaml
+- uses: sshaplygin/benchmark-report@<reviewed-commit-sha>
+  with:
+    report-path: benchmark-report.md
+    header: benchmark-report-go
+```
+
+This entry point needs no Go or Python installation. It accepts existing reports from either repository. It supports Linux and macOS runners with Bash and the Node 24 action runtime required by the pinned dependency. See [publication configuration](docs/publication.md) for inputs, permissions, fork behavior, and migration of old comments.
+
+## Planned local use
+
+The planned CLI computes and renders reports without a GitHub client:
 
 ```sh
 benchreport normalize --parser go --manifest base-inputs.json --out base.json
@@ -62,6 +77,7 @@ Use `--parser criterion` for Criterion logs. These commands do not require GitHu
 | [Architecture](docs/architecture.md) | Data contracts, CLI boundaries, comparison semantics, CI integration, and trust boundaries |
 | [Configuration](docs/configuration.md) | User controls, defaults, validation, selection rules, and output behavior |
 | [Output examples](docs/output-examples.md) | Expected rendered results and the configuration choices that produce them |
+| [Publication](docs/publication.md) | Implemented action inputs, dependency pin, event handling, permissions, and comment migration |
 | [Implementation plan](docs/implementation-plan.md) | Ordered delivery stages, definitions of done, reviewer acceptance criteria, and release evidence |
 | [Example configuration](examples/benchmark-report.json) | A complete consumer configuration using the proposed interface |
 

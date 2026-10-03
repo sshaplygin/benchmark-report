@@ -1,0 +1,55 @@
+name: Benchmark Report
+description: Publish a generated benchmark Markdown report as a job summary and an updatable PR comment.
+inputs:
+  report-path:
+    description: Path to one nonempty UTF-8 Markdown file.
+    required: true
+  header:
+    description: Stable comment identifier, unique per report within a PR.
+    default: benchmark-report
+  publish:
+    description: Publish a comment on same-repository pull_request events.
+    default: 'true'
+  summary:
+    description: Append the report to the GitHub job summary.
+    default: 'true'
+  github-token:
+    description: Token with pull-requests write permission in the publishing job.
+    default: ${{ github.token }}
+outputs:
+  publication:
+    description: completed, disabled, fork, dependabot, or unsupported-event; completed also includes an unchanged comment.
+    value: ${{ steps.prepare.outputs.publication }}
+  previous-comment-id:
+    description: Existing comment ID returned by sticky-pull-request-comment.
+    value: ${{ steps.sticky.outputs.previous_comment_id }}
+  created-comment-id:
+    description: New comment ID returned by sticky-pull-request-comment.
+    value: ${{ steps.sticky.outputs.created_comment_id }}
+runs:
+  using: composite
+  steps:
+    - name: Prepare report
+      id: prepare
+      shell: bash
+      env:
+        REPORT_PATH: ${{ inputs.report-path }}
+        COMMENT_HEADER: ${{ inputs.header }}
+        PUBLISH: ${{ inputs.publish }}
+        SUMMARY: ${{ inputs.summary }}
+        EVENT_NAME: ${{ github.event_name }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+        REPOSITORY: ${{ github.repository }}
+        ACTOR: ${{ github.actor }}
+      run: bash "$GITHUB_ACTION_PATH/scripts/prepare-comment.sh"
+    - name: Update benchmark comment
+      id: sticky
+      if: steps.prepare.outputs.publish == 'true'
+      uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
+      with:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        header: ${{ inputs.header }}
+        path: ${{ steps.prepare.outputs.comment-path }}
+        skip_unchanged: 'true'
+        ignore_empty: 'false'

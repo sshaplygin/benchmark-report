@@ -4,17 +4,17 @@ This document specifies the first release. Interfaces are proposed until stage 1
 
 ## Boundaries
 
-The executable is `benchreport`. Its parsing, comparison, rendering, export, and GitHub publication code is written in Go. A composite action installs the released binary and invokes it. Go consumers and Rust consumers use the same binary.
+The planned executable is `benchreport`. Its parsing, comparison, rendering, and export code is written in Go. A future report action installs the released binary and invokes it. The root publication action already accepts a completed Markdown file and delegates GitHub comment operations to sticky-pull-request-comment. Go consumers and Rust consumers use the same reporting interface.
 
 The first release supports Linux and macOS on amd64 and arm64. Installation uses release assets and published SHA-256 checksums. It does not install Go in consumer workflows. The action version selects a matching binary version; consumers pin the action to a commit. The release process must verify that mapping.
 
 Go statistical analysis uses a pinned upstream benchstat binary built from a fixed `golang.org/x/perf` revision and included in each platform release archive. Keep its version in the release manifest and reproduction metadata. Locate it beside `benchreport`; an explicit `--benchstat-path` may select another copy only if it matches the recorded version. Do not implement a replacement significance test. The main CLI works without benchstat unless statistical details are requested. Criterion comparison initially uses the point estimates in its logs and does not claim statistical significance between independent runs.
 
-Suggested source boundaries are `cmd/benchreport` and packages for input, comparison, rendering, export, configuration, and publication. Domain packages must not depend on GitHub environment variables or API clients.
+Suggested source boundaries are `cmd/benchreport` and packages for input, comparison, rendering, export, and configuration. Domain packages must not depend on GitHub environment variables or API clients. The CLI has no publication command or GitHub API client.
 
 ## Adapter boundary
 
-An input adapter translates a benchmark framework's results into the normalized-run model. It owns source syntax, metric mapping, estimator identification, and parser diagnostics. Shared comparison, rendering, export, and publication consume that model without importing parser implementations. Source-specific statistical analysis remains an explicit optional capability; benchstat is not a requirement for other adapters.
+An input adapter translates a benchmark framework's results into the normalized-run model. It owns source syntax, metric mapping, estimator identification, and parser diagnostics. Shared comparison, rendering, and export consume that model without importing parser implementations. Publication receives only the rendered file. Source-specific statistical analysis remains an explicit optional capability; benchstat is not a requirement for other adapters.
 
 The PoC needs only the two adapters specified under [Normalization](#normalization). Use their shared boundary to accommodate later adapters without introducing a dynamic plugin loader or a public extension API. Additional metrics or framework semantics may require a versioned schema extension; do not claim compatibility before defining and testing that mapping. The [post-PoC TODO list](implementation-plan.md#todo-after-the-poc) records candidate formats.
 
@@ -61,7 +61,6 @@ Presentation filters never change classification, the stored comparison, or a fa
 | `compare --base FILE --head FILE --config FILE --out FILE` | Validate compatibility, calculate comparisons, and optionally execute pinned benchstat against the recorded raw Go inputs |
 | `render --input FILE --config FILE --output-dir DIR` | Render selected formats from an existing comparison without recalculation |
 | `export --input FILE --config FILE --output-dir DIR` | Export one normalized run for the history action |
-| `comment --body-file FILE --repo OWNER/REPO --pr NUMBER --marker TEXT` | Create or update the matching report comment using the GitHub API |
 | `config validate --config FILE` | Validate configuration without benchmarks, network access, or filesystem writes |
 
 `--config` is optional; omission uses documented defaults. A supplied missing configuration is an error. Resolve templates or output names only as specified by the [configuration contract](configuration.md); there are no arbitrary command hooks.
@@ -72,15 +71,15 @@ Output ordering and numeric formatting are deterministic. Do not insert a curren
 
 ## GitHub integration
 
-Provide separate `report` and `publish` composite action entry points. `report` orchestrates normalization, comparison, rendering, and reproduction artifacts from downloaded input manifests. It returns paths for the report, comparison, reproduction manifest, and any requested history export, plus a regression status. It appends Markdown to the job summary only when requested.
+Keep computation and publication in separate jobs. The planned `report` entry point orchestrates normalization, comparison, rendering, and reproduction artifacts from downloaded input manifests. It returns paths for the report, comparison, reproduction manifest, and any requested history export, plus a regression status. The root publication action owns optional job-summary output so callers do not append the same report twice.
 
-`publish` consumes a completed report and calls `comment`. It does not run benchmarks or check out PR code. Publication uses an explicit token, with `pull-requests: write` limited to the publishing job. Query all comment pages, match both the exact marker and the configured bot identity, and update that comment. Preserve the existing consumer markers during migration. Duplicate matching bot comments cause a diagnostic failure rather than an arbitrary edit. API failures never count as successful publication. Retry rate-limited reads and updates within a bounded deadline. After an ambiguous create response, query the marker again before attempting another create; never blindly retry a POST.
+The root action consumes a completed report and invokes a pinned sticky-pull-request-comment. The dependency owns comment lookup, pagination, author matching, and create/update requests. Do not add a parallel API client, custom retry layer, or comment discovery implementation. The implemented input contract and legacy-marker migration are defined in [Publication](publication.md).
 
-Serialize report publication per repository, PR, and report marker using workflow concurrency. Before an update, verify that the report head SHA still matches the PR head. Skip a stale report with an explicit action status. This check limits stale writes but is not atomic with GitHub's comment update; workflow serialization remains required.
+Serialize the complete benchmark workflow per PR and report header with cancellation of superseded runs. The wrapper does not query current PR head state and cannot guarantee that an explicitly rerun old workflow will not replace a newer report. Strict freshness checking is deferred; disclose this limitation instead of promising it through sticky-pull-request-comment.
 
 Benchmark execution jobs use read-only repository permissions and no publication secrets. The default fork behavior is summary plus artifacts. A privileged publisher must never execute PR-supplied binaries, actions, scripts, or configuration hooks. Cross-workflow publication for forks is outside the first release.
 
-Report rendering must escape benchmark names, revision labels, and metadata for the selected context. No user-supplied value becomes shell code. Configuration cannot read environment secrets or invoke commands. Publication enforces a 60,000-byte UTF-8 comment budget; oversized reports use deterministic row truncation, a visible omitted-row count, and a link to the full report artifact. A link is required before publishing a shortened report. Fail if the fixed content alone exceeds the budget.
+Report rendering must escape benchmark names, revision labels, and metadata for the selected context. No user-supplied value becomes shell code. Configuration cannot read environment secrets or invoke commands. The publication action rejects oversized comments rather than modifying supplied Markdown. The planned renderer will produce a shortened comment with deterministic row truncation, an omitted-row count, and a link to the complete artifact when needed. Its comment budget must include the upstream marker defined in Publication. Fail if the fixed content alone exceeds that budget.
 
 ## History integration
 

@@ -2,6 +2,8 @@
 
 Deliver a reusable Go CLI and action that satisfy the [architecture](architecture.md) and [configuration](configuration.md) contracts. This plan defines delivery order and review evidence. It does not authorize changes to the consumer repositories or publication of releases.
 
+The root publication wrapper is implemented against sticky-pull-request-comment and accepts existing Markdown reports. Its contract and current verification scope are in [Publication](publication.md). The generator stages below remain planned; stage 6 covers integration and release acceptance of the wrapper, not a new GitHub API client.
+
 ## Adapter scope for the PoC
 
 The PoC implements only Go benchmark text and Rust Criterion logs. Other input formats are deferred. Their absence does not block PoC acceptance or the initial release described by this plan.
@@ -138,23 +140,23 @@ The pinned external action accepts exported data and updates a test history. The
 
 **Work**
 
-- Implement GitHub API pagination, bot and marker matching, create/update behavior, stale-head checks, bounded retries, and explicit publication statuses.
-- Implement comment size handling and link shortened comments to the full artifact.
-- Package the separate report and publish actions, release asset installer, checksums, and version mapping.
+- Integrate the report generator with the root publication wrapper, following the [publication contract](publication.md). Delegate comment operations to the pinned upstream action; do not implement a Go publisher.
+- Have the renderer supply a shortened comment linked to the complete artifact when necessary; the publication wrapper rejects over-budget files.
+- Package the planned report action and its binary installer, checksums, and version mapping. Keep publication usable with a pre-rendered file and no generator installation.
 - Define action inputs and outputs as a schema-backed contract. Include reproduction artifact paths and the comparison gate status.
 - Provide workflow control flow that publishes reports before applying an enabled regression gate to the final job status.
 
 **Definition of done**
 
-Mock-server integration tests cover publication behavior. Packaged binaries run on all four target platforms. Action examples use released binaries and require no Go or Python installation in consumer workflows. No successful status hides a failed report upload or API call.
+Local wrapper tests and summary-only CI pass. An authorized trial PR verifies upstream create/update integration. Packaged generator binaries run on all four target platforms. Consumer workflows require no Go or Python installation for reporting or publication. API failures fail the publishing step; skipped publication has an explicit status.
 
 **Reviewer acceptance**
 
-- The publication reviewer tests a matching comment beyond page one, a user comment containing the marker, multiple matching bot comments, permission failure, rate limiting, timeout, and invalid response data.
-- A rerun updates the same comment; separate markers retain separate comments. An outdated head produces an explicit skip.
-- Oversized Unicode content is truncated on valid boundaries with an accurate omitted-row count and a working artifact link. The complete artifact stays intact.
+- The publication reviewer verifies the upstream SHA and its input mapping, then tests create, update, unchanged content, distinct headers, and insufficient permissions in an authorized trial. Upstream API internals are not reimplemented or given a separate mock test suite here.
+- Wrapper tests cover missing, blank, invalid UTF-8, symlinked, and oversized reports; filenames containing glob characters still resolve to exactly one file.
+- The renderer shortens oversized Unicode content on valid boundaries, with an accurate omitted-row count and a working artifact link. The complete artifact stays intact; the wrapper rejects a comment that still exceeds its budget.
 - The workflow reviewer confirms PR execution cannot access the publication token and the publisher does not execute checked-out PR code.
-- Fork examples finish with summary and artifacts without attempting unauthorized comments. Concurrent report jobs use the documented serialization key.
+- Fork and Dependabot examples finish with summary and caller-uploaded artifacts without attempting comments. Concurrent report workflows use the documented serialization key; documentation does not claim an atomic stale-head check.
 - The release reviewer corrupts a downloaded asset and confirms installation fails; version mismatches cannot silently select another binary.
 
 ## Stage 7 Consumer migration trial
@@ -162,7 +164,7 @@ Mock-server integration tests cover publication behavior. Packaged binaries run 
 **Work**
 
 - Prepare separate proposed migrations for `go-socket.io` and `ytsaurus-rs` using the shared action and per-repository configuration.
-- Preserve benchmark commands, toolchains, same-runner base/head execution, and the original comment markers.
+- Preserve benchmark commands, toolchains, and same-runner base/head execution. Choose stable sticky headers and apply the [legacy-comment migration](publication.md#migrating-existing-comments).
 - Replace formatting and publication scripts only after comparisons against archived reports pass.
 - Record intentional behavior changes, including the Criterion inline-name parser fix, with before/after fixtures.
 - Document rollback to the previous pinned workflows and artifacts.
@@ -174,7 +176,7 @@ Both proposed migrations have verified artifacts and reviewer evidence. Trial ex
 **Reviewer acceptance**
 
 - The consumer reviewer reproduces the Go report from PR 15 and a Criterion report from all configured suites, checking numeric equivalence and documented presentation differences.
-- An existing bot comment is updated rather than duplicated in an authorized trial.
+- In an authorized trial, a second run updates the sticky-managed comment. Existing legacy comments follow the documented one-time migration policy; ID preservation is required only when that migration mode is explicitly chosen.
 - Go change detection and Rust suite selection retain their existing scope. Toolchain equality is enforced by the actual commands, not only claimed in report text.
 - A failed suite cannot produce an apparently complete report; an added or removed benchmark remains visible under the configured policy.
 - The reviewer executes the rollback instructions in a disposable checkout and verifies the old workflow references are restored.

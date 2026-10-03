@@ -1,0 +1,32 @@
+name: Action checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  publication:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-14]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Check preparation behavior
+        run: bash tests/prepare-comment.sh
+      - name: Create sample report
+        shell: bash
+        run: printf '# Benchmark report\n\nSynthetic summary-only check.\n' > sample-report.md
+      - name: Check composite action
+        id: report
+        uses: ./
+        with:
+          report-path: sample-report.md
+          publish: 'false'
+      - name: Check publication status
+        shell: bash
+        env:
+          PUBLICATION: ${{ steps.report.outputs.publication }}
+        run: test "$PUBLICATION" = disabled
