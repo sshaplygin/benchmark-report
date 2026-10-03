@@ -9,7 +9,9 @@ import (
 	"math/big"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
@@ -20,6 +22,12 @@ const BenchstatVersion = "v0.0.0-20251023143056-3684bd442cc8"
 
 // Decode rejects duplicate object keys at every depth before schema validation.
 func Decode(data []byte) (any, error) {
+	if !utf8.Valid(data) {
+		return nil, fmt.Errorf("invalid UTF-8 JSON")
+	}
+	if err := validateSurrogates(data); err != nil {
+		return nil, err
+	}
 	d := json.NewDecoder(bytes.NewReader(data))
 	d.UseNumber()
 	v, err := value(d, "$")
@@ -77,11 +85,17 @@ func value(d *json.Decoder, path string) (any, error) {
 
 // Validate validates a document against a local schema, with no network access.
 func Validate(schemaPath string, data []byte) error {
-	v, err := Decode(data)
+
+	raw, err := os.ReadFile(schemaPath)
 	if err != nil {
 		return err
 	}
-	raw, err := os.ReadFile(schemaPath)
+	return ValidateSchema(raw, data)
+}
+
+// ValidateSchema validates against an embedded or explicitly supplied schema document.
+func ValidateSchema(raw, data []byte) error {
+	v, err := Decode(data)
 	if err != nil {
 		return err
 	}
@@ -316,6 +330,49 @@ func documentRules(x map[string]any) error {
 			if err := add(get(history, "bigger_file", "benchmark-bigger.json")); err != nil {
 				return err
 			}
+		}
+	}
+	return nil
+}
+
+// validateSurrogates prevents encoding/json from replacing invalid identity escapes.
+func validateSurrogates(data []byte) error {
+	inside := false
+	for i := 0; i < len(data); i++ {
+		if data[i] == '"' {
+			inside = !inside
+			continue
+		}
+		if !inside || data[i] != '\\' {
+			continue
+		}
+		i++
+		if i >= len(data) {
+			break
+		}
+		if data[i] != 'u' {
+			continue
+		}
+		if i+4 >= len(data) {
+			break
+		}
+		code, err := strconv.ParseUint(string(data[i+1:i+5]), 16, 16)
+		if err != nil {
+			continue
+		}
+		i += 4
+		if code >= 0xdc00 && code <= 0xdfff {
+			return fmt.Errorf("JSON string: unpaired low surrogate")
+		}
+		if code >= 0xd800 && code <= 0xdbff {
+			if i+6 >= len(data) || data[i+1] != '\\' || data[i+2] != 'u' {
+				return fmt.Errorf("JSON string: unpaired high surrogate")
+			}
+			low, err := strconv.ParseUint(string(data[i+3:i+7]), 16, 16)
+			if err != nil || low < 0xdc00 || low > 0xdfff {
+				return fmt.Errorf("JSON string: invalid surrogate pair")
+			}
+			i += 6
 		}
 	}
 	return nil

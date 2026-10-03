@@ -1,6 +1,6 @@
 # Benchmark Report
 
-Benchmark Report provides a composite GitHub Action that publishes a prepared Markdown report through `sticky-pull-request-comment`. The Go CLI for comparison, configurable rendering, and local reproduction is planned; it is not implemented or released yet. CLI examples describe the intended interface.
+Benchmark Report provides a composite GitHub Action that publishes a prepared Markdown report through `sticky-pull-request-comment`. The Go CLI normalizes Go benchmark text and Rust Criterion logs into a shared format. Comparison, configurable rendering, and local report reproduction remain planned; no CLI release is available yet.
 
 See [output examples](docs/output-examples.md) for Go and Criterion reports, a compact report, allocation and throughput tables, and history JSON.
 
@@ -53,13 +53,26 @@ After generating or downloading `benchmark-report.md`, call the root action in a
 
 This entry point needs no Go or Python installation. It accepts existing reports from either repository. It supports Linux and macOS runners with Bash and the Node 24 action runtime required by the pinned dependency. See [publication configuration](docs/publication.md) for inputs, permissions, fork behavior, and migration of old comments.
 
-## Planned local use
+## Local normalization
 
-The planned CLI computes and renders reports without a GitHub client:
+Build from source with Go 1.25 or later. The captured manifests provide runnable examples with recorded revisions, toolchains, suite commands, and input paths:
 
 ```sh
-benchreport normalize --parser go --manifest base-inputs.json --out base.json
-benchreport normalize --parser go --manifest head-inputs.json --out head.json
+go build -o bin/benchreport ./cmd/benchreport
+mkdir -p out
+./bin/benchreport normalize --parser go \
+  --manifest testdata/captured/go-pr15/base-manifest.json --out out/base.json
+./bin/benchreport normalize --parser criterion \
+  --manifest testdata/captured/criterion-four-suites/head-manifest.json --out out/criterion.json
+```
+
+Normalization preserves source checksums, Go samples, and Criterion estimate bounds. It reads recorded logs without running benchmarks or contacting GitHub. See [manifest contracts](docs/contracts.md#metadata-and-files) for preparing your own inputs and [fixture evidence](docs/fixtures.md) for the captured runs.
+
+## Planned comparison and reporting
+
+The remaining commands will consume normalized base/head files:
+
+```sh
 benchreport compare --base base.json --head head.json \
   --config benchmark-report.json --out comparison.json
 benchreport render --input comparison.json \
