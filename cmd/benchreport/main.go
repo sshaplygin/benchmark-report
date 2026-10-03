@@ -5,19 +5,26 @@ import (
 	"fmt"
 	"github.com/sshaplygin/benchmark-report/internal/adapters/criterion"
 	"github.com/sshaplygin/benchmark-report/internal/adapters/gobench"
+	"github.com/sshaplygin/benchmark-report/internal/compare"
+	"github.com/sshaplygin/benchmark-report/internal/config"
 	"github.com/sshaplygin/benchmark-report/internal/input"
+	"github.com/sshaplygin/benchmark-report/internal/model"
+	"github.com/sshaplygin/benchmark-report/internal/statistics"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 var version = "0.1.0-dev"
 
-const help = `benchreport normalizes recorded Go and Criterion benchmarks offline.
+const help = `benchreport normalizes and compares recorded benchmarks offline.
 Usage:
   benchreport normalize --parser go|criterion --manifest FILE --out FILE
+  benchreport compare --base FILE --head FILE [--config FILE] --out FILE [--allow-environment-mismatch] [--benchstat-path FILE]
+  benchreport config validate --config FILE
   benchreport --version
   benchreport --help
-Only normalize is implemented at this stage. Diagnostics go to stderr.
+Diagnostics go to stderr. compare writes its complete artifact before gate exit 2.
 `
 
 func main() { os.Exit(run(os.Args[1:], os.Stdout, os.Stderr)) }
@@ -35,6 +42,12 @@ func run(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stdout, "benchreport %s\n", version)
 			return 0
 		}
+	}
+	if args[0] == "compare" {
+		return runCompare(args[1:], stdout, stderr)
+	}
+	if args[0] == "config" {
+		return runConfig(args[1:], stdout, stderr)
 	}
 	if args[0] != "normalize" {
 		fmt.Fprintf(stderr, "unknown command %q\n", args[0])
@@ -75,6 +88,162 @@ func run(args []string, stdout, stderr io.Writer) int {
 	if err := input.Normalize(*parser, *manifest, *out, adapter); err != nil {
 		fmt.Fprintln(stderr, err)
 		return 1
+	}
+	return 0
+}
+
+func parseFlags(flags *flag.FlagSet, args []string) int {
+	if err := flags.Parse(args); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
+		return 1
+	}
+	return -1
+}
+func explicitEmpty(flags *flag.FlagSet, name string, value string) bool {
+	found := false
+	flags.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			found = true
+		}
+	})
+	return found && value == ""
+}
+func runConfig(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 1 && (args[0] == "--help" || args[0] == "-h") {
+		fmt.Fprintln(stdout, "Usage: benchreport config validate --config FILE")
+		return 0
+	}
+	if len(args) == 0 || args[0] != "validate" {
+		fmt.Fprintln(stderr, "Usage: benchreport config validate --config FILE")
+		return 1
+	}
+	if len(args) == 2 && args[1] == "--version" {
+		fmt.Fprintf(stdout, "benchreport %s\n", version)
+		return 0
+	}
+	flags := flag.NewFlagSet("config validate", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	flags.Usage = func() { fmt.Fprintln(stdout, "Usage: benchreport config validate --config FILE") }
+	path := flags.String("config", "", "version 1 configuration")
+	if code := parseFlags(flags, args[1:]); code >= 0 {
+		return code
+	}
+	if *path == "" || flags.NArg() != 0 {
+		fmt.Fprintln(stderr, "config validate requires --config FILE and no positional arguments")
+		return 1
+	}
+	if _, err := config.Load(*path); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	return 0
+}
+func runCompare(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 1 && args[0] == "--version" {
+		fmt.Fprintf(stdout, "benchreport %s\n", version)
+		return 0
+	}
+	flags := flag.NewFlagSet("compare", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	flags.Usage = func() {
+		fmt.Fprintln(stdout, "Usage: benchreport compare --base FILE --head FILE [--config FILE] --out FILE [--allow-environment-mismatch] [--benchstat-path FILE]")
+	}
+	basePath := flags.String("base", "", "normalized base run")
+	headPath := flags.String("head", "", "normalized head run")
+	configPath := flags.String("config", "", "optional version 1 configuration")
+	out := flags.String("out", "", "comparison output file")
+	allow := flags.Bool("allow-environment-mismatch", false, "permit and disclose environment mismatch")
+	benchstatPath := flags.String("benchstat-path", "", "explicit matching pinned benchstat executable")
+	if code := parseFlags(flags, args); code >= 0 {
+		return code
+	}
+	if flags.NArg() != 0 || *basePath == "" || *headPath == "" || *out == "" || explicitEmpty(flags, "config", *configPath) || explicitEmpty(flags, "benchstat-path", *benchstatPath) {
+		fmt.Fprintln(stderr, "compare requires --base, --head, --out and nonempty supplied paths")
+		return 1
+	}
+	base, err := input.LoadRun(*basePath)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	head, err := input.LoadRun(*headPath)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	cfg, err := config.Load(*configPath)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	artifact, err := compare.Runs(base, head, cfg.Comparison, *allow, version)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	protected := []string{*basePath, *headPath}
+	if *configPath != "" {
+		protected = append(protected, *configPath)
+	}
+	for _, side := range []struct {
+		path string
+		run  model.Run
+	}{{*basePath, base}, {*headPath, head}} {
+		for _, raw := range side.run.Inputs {
+			resolved, err := input.ResolveReference(side.path, raw.Path)
+			if err != nil {
+				fmt.Fprintln(stderr, err)
+				return 1
+			}
+			protected = append(protected, resolved)
+		}
+	}
+	if cfg.Comparison.Statistics == "benchstat" {
+		tool, err := statistics.ResolveExecutable(*benchstatPath)
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+		protected = append(protected, tool)
+		artifact.Statistics, err = statistics.Analyze(*basePath, *headPath, base, head, *benchstatPath)
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+		outputParent, err := input.ResolveReference(*out, ".")
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+		for i := range artifact.Statistics {
+			for j := range artifact.Statistics[i].Inputs {
+				record := &artifact.Statistics[i].Inputs[j]
+				sourceDocument := *basePath
+				if record.Side == "head" {
+					sourceDocument = *headPath
+				}
+				source, err := input.ResolveReference(sourceDocument, record.Path)
+				if err != nil {
+					fmt.Fprintln(stderr, err)
+					return 1
+				}
+				relative, err := filepath.Rel(outputParent, source)
+				if err != nil {
+					fmt.Fprintln(stderr, err)
+					return 1
+				}
+				record.Path = filepath.ToSlash(relative)
+			}
+		}
+	}
+	if err := input.WriteDocument("comparison", artifact, *out, protected); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	if artifact.Gate == "failed" {
+		return 2
 	}
 	return 0
 }

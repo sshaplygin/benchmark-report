@@ -31,7 +31,7 @@ func LoadManifest(path string) (model.Manifest, error) {
 	if err != nil {
 		return m, fmt.Errorf("%s: %w", path, err)
 	}
-	if err = json.Unmarshal(data, &m); err != nil {
+	if err = contracts.Unmarshal(data, &m); err != nil {
 		return m, fmt.Errorf("%s: %w", path, err)
 	}
 	return m, nil
@@ -190,6 +190,13 @@ func distinctOutput(out, input string) error {
 	return nil
 }
 func atomicWrite(path string, data []byte) error {
+	executable, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("running executable: %w", err)
+	}
+	if err = distinctOutput(path, executable); err != nil {
+		return err
+	}
 	if info, err := os.Lstat(path); err == nil && info.Mode()&os.ModeSymlink != 0 {
 		return fmt.Errorf("output %s is a symlink", path)
 	}

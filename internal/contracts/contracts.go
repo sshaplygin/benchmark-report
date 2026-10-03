@@ -377,3 +377,48 @@ func validateSurrogates(data []byte) error {
 	}
 	return nil
 }
+
+// Unmarshal decodes a schema-validated document into typed structs, accepting
+// mathematical JSON integers such as 1.0 and 1e0 while preserving decimal policy text.
+func Unmarshal(data []byte, target any) error {
+	value, err := Decode(data)
+	if err != nil {
+		return err
+	}
+	var normalize func(any) error
+	normalize = func(value any) error {
+		switch v := value.(type) {
+		case []any:
+			for _, child := range v {
+				if err := normalize(child); err != nil {
+					return err
+				}
+			}
+		case map[string]any:
+			for key, child := range v {
+				if key == "schema_version" || key == "percent_decimals" {
+					number, ok := child.(json.Number)
+					if ok {
+						n, ok := new(big.Rat).SetString(string(number))
+						if !ok || !n.IsInt() {
+							return fmt.Errorf("%s: integer required", key)
+						}
+						v[key] = json.Number(n.Num().String())
+					}
+				}
+				if err := normalize(child); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+	if err = normalize(value); err != nil {
+		return err
+	}
+	canonical, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(canonical, target)
+}

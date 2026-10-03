@@ -1,6 +1,6 @@
 # Architecture
 
-This document specifies the first release. Version 1 schemas and serialization rules are defined in [Contracts](contracts.md); the generator CLI remains planned pending the stages in the [implementation plan](implementation-plan.md).
+This document specifies the first release. Version 1 schemas and serialization rules are defined in [Contracts](contracts.md); normalization, comparison, and configuration validation are implemented, while rendering and history export remain pending the stages in the [implementation plan](implementation-plan.md).
 
 ## Boundaries
 

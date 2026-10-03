@@ -137,3 +137,28 @@ func Median(samples []string) (string, error) {
 	}
 	return String(n)
 }
+
+// RoundSigned rounds an exact rational to decimal places, ties away from zero.
+func RoundSigned(value *big.Rat, places int) (string, error) {
+	if places < 0 || places > 4 {
+		return "", fmt.Errorf("percent precision must be 0 through 4")
+	}
+	negative := value.Sign() < 0
+	n := new(big.Rat).Abs(value)
+	factor := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(places)), nil)
+	n.Mul(n, new(big.Rat).SetInt(factor))
+	whole, rem := new(big.Int), new(big.Int)
+	whole.QuoRem(n.Num(), n.Denom(), rem)
+	if new(big.Int).Lsh(rem, 1).Cmp(n.Denom()) >= 0 {
+		whole.Add(whole, big.NewInt(1))
+	}
+	rounded := new(big.Rat).SetFrac(whole, factor)
+	text, err := String(rounded)
+	if err != nil {
+		return "", err
+	}
+	if negative && whole.Sign() != 0 {
+		text = "-" + text
+	}
+	return text, nil
+}
