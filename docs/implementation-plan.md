@@ -2,6 +2,21 @@
 
 Deliver a reusable Go CLI and action that satisfy the [architecture](architecture.md) and [configuration](configuration.md) contracts. This plan defines delivery order and review evidence. It does not authorize changes to the consumer repositories or publication of releases.
 
+## Adapter scope for the PoC
+
+The PoC implements only Go benchmark text and Rust Criterion logs. Other input formats are deferred. Their absence does not block PoC acceptance or the initial release described by this plan.
+
+Keep the [adapter boundary](architecture.md#adapter-boundary) open to additional formats. For the PoC, this requires separation between input parsing and the shared comparison and rendering code. It does not require a plugin system, public adapter SDK, placeholder parsers, additional runtime dependencies, or fixtures for deferred frameworks.
+
+### TODO after the PoC
+
+- [ ] Evaluate a C++ adapter for [Google Benchmark JSON](https://google.github.io/benchmark/user_guide.html#output-formats), preserving CPU time and elapsed time as distinct metrics.
+- [ ] Evaluate a .NET adapter for [BenchmarkDotNet JSON exports](https://benchmarkdotnet.org/articles/configs/exporters.html), preserving runtime, job, and benchmark parameter identity.
+- [ ] Evaluate a JS/TS adapter for [Tinybench](https://github.com/tinylibs/tinybench), with an explicit export format and supported version range.
+- [ ] Design a public `benchreport-json` input format for custom producers. The internal normalized-run document is not yet a stable public ingestion API.
+
+Each future adapter needs its own format mapping, compatibility policy, fixtures, and acceptance criteria before implementation. These TODOs are references for later work, not additional stages or commitments for the PoC.
+
 ## Review process
 
 Each stage is submitted with its diff, requirement links, verification commands and results, and any unresolved defects. Reviewer agents examine the stage independently of the implementing agent's summary. They inspect relevant code and fixtures and reproduce the checks listed below. No review stage is complete solely because another agent reports success.
@@ -29,6 +44,7 @@ Schemas, examples, CLI help specification, fixture provenance, and the requireme
 - The contract reviewer validates all example documents against the schemas and rejects unknown and duplicate fields.
 - The benchmark reviewer traces a repeated Go benchmark and a Criterion estimate through the proposed model without losing suite identity, estimator, or units.
 - The reviewer can distinguish missing input, missing suite, removed benchmark, and unsupported metric from the schema alone.
+- The shared model represents metric units, direction, and estimator without requiring a Go package or Go sample data for every source. Adding a parser does not require a separate renderer or publisher.
 - All unresolved questions that affect parsing or output compatibility are closed before stage 2.
 
 ## Stage 2 Input adapters
@@ -51,6 +67,7 @@ Both adapters normalize captured consumer logs and the expected valid fixtures. 
 - Criterion cases cover short inline names, long names, progress output, mixed time units, and baseline percentage lines.
 - Negative tests cover missing suite files, truncated measurements, non-finite values, duplicate definitions, and logs with no measurements.
 - Fuzz tests exercise parsing and identity construction; regression seeds for discovered defects are committed.
+- Parser-specific handling stays behind the adapter boundary. Deferred parser names are rejected as unsupported; they are not advertised as implemented or treated as empty successful inputs.
 
 ## Stage 3 Comparison and statistical details
 

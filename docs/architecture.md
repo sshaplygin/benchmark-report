@@ -12,6 +12,12 @@ Go statistical analysis uses a pinned upstream benchstat binary built from a fix
 
 Suggested source boundaries are `cmd/benchreport` and packages for input, comparison, rendering, export, configuration, and publication. Domain packages must not depend on GitHub environment variables or API clients.
 
+## Adapter boundary
+
+An input adapter translates a benchmark framework's results into the normalized-run model. It owns source syntax, metric mapping, estimator identification, and parser diagnostics. Shared comparison, rendering, export, and publication consume that model without importing parser implementations. Source-specific statistical analysis remains an explicit optional capability; benchstat is not a requirement for other adapters.
+
+The PoC needs only the two adapters specified under [Normalization](#normalization). Use their shared boundary to accommodate later adapters without introducing a dynamic plugin loader or a public extension API. Additional metrics or framework semantics may require a versioned schema extension; do not claim compatibility before defining and testing that mapping. The [post-PoC TODO list](implementation-plan.md#todo-after-the-poc) records candidate formats.
+
 ## Data contracts
 
 All JSON documents carry `schema_version: 1`, except the external action's array format. Readers reject unsupported versions and duplicate object keys. Input validation reports the file and field or line involved. Schemas and valid and invalid fixtures are stage 1 deliverables.
