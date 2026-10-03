@@ -1,6 +1,6 @@
 # Architecture
 
-This document specifies the first release. Interfaces are proposed until stage 1 of the [implementation plan](implementation-plan.md) freezes their schemas.
+This document specifies the first release. Version 1 schemas and serialization rules are defined in [Contracts](contracts.md); the generator CLI remains planned pending the stages in the [implementation plan](implementation-plan.md).
 
 ## Boundaries
 
@@ -93,6 +93,6 @@ The external format is specified in [github-action-benchmark's documentation](ht
 
 ## Reproduction artifacts
 
-Archive raw inputs, manifests, effective configuration, normalized runs, comparison JSON, complete rendered reports, benchstat output when enabled, and checksums. Rewrite archived file references to bundle-relative paths and reject references outside the bundle during replay. A replay command sequence in each artifact starts at rendering when only presentation is being reproduced and at normalization when calculation is being verified. Offline replay requires the matching platform release archive to be installed beforehand; no command downloads missing tools implicitly.
+The planned report-action orchestration archives raw inputs, manifests, effective configuration, normalized runs, comparison JSON, complete rendered reports, benchstat output when enabled, and checksums. Standalone `render` produces a presentation replay bundle from its comparison and effective configuration; it does not claim to verify normalization. Fixed bundle paths and reserved names are defined in [Contracts](contracts.md#reproduction-layout). Rewrite archived file references to bundle-relative paths and reject references outside the bundle during replay. A replay command sequence in each artifact starts at rendering when only presentation is being reproduced and at normalization when calculation is being verified. Offline replay requires the matching platform release archive to be installed beforehand; no command downloads missing tools implicitly.
 
 Record benchstat input ordering and suite boundaries. Missing archived dependencies produce an explicit error. No step silently fetches a baseline, infers a different revision, or replaces a recorded tool version with the latest release.

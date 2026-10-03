@@ -1,0 +1,115 @@
+Benchmarking write/write_table_rows/1000
+Benchmarking write/write_table_rows/1000: Warming up for 3.0000 s
+Benchmarking write/write_table_rows/1000: Collecting 100 samples in estimated 5.8585 s (20k iterations)
+Benchmarking write/write_table_rows/1000: Analyzing
+write/write_table_rows/1000
+                        time:   [282.39 µs 285.18 µs 287.89 µs]
+                        thrpt:  [344.30 MiB/s 347.57 MiB/s 351.00 MiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+Benchmarking write/encode_then_write_table/1000
+Benchmarking write/encode_then_write_table/1000: Warming up for 3.0000 s
+Benchmarking write/encode_then_write_table/1000: Collecting 100 samples in estimated 5.6350 s (20k iterations)
+Benchmarking write/encode_then_write_table/1000: Analyzing
+write/encode_then_write_table/1000
+                        time:   [273.54 µs 275.98 µs 278.28 µs]
+                        thrpt:  [356.19 MiB/s 359.16 MiB/s 362.37 MiB/s]
+Found 13 outliers among 100 measurements (13.00%)
+  11 (11.00%) low mild
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking write/write_table_rows/10000
+Benchmarking write/write_table_rows/10000: Warming up for 3.0000 s
+
+Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 9.9s, enable flat sampling, or reduce sample count to 50.
+Benchmarking write/write_table_rows/10000: Collecting 100 samples in estimated 9.8838 s (5050 iterations)
+Benchmarking write/write_table_rows/10000: Analyzing
+write/write_table_rows/10000
+                        time:   [1.8917 ms 1.9103 ms 1.9330 ms]
+                        thrpt:  [513.97 MiB/s 520.07 MiB/s 525.18 MiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+Benchmarking write/encode_then_write_table/10000
+Benchmarking write/encode_then_write_table/10000: Warming up for 3.0000 s
+
+Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 9.1s, enable flat sampling, or reduce sample count to 50.
+Benchmarking write/encode_then_write_table/10000: Collecting 100 samples in estimated 9.1026 s (5050 iterations)
+Benchmarking write/encode_then_write_table/10000: Analyzing
+write/encode_then_write_table/10000
+                        time:   [1.9867 ms 1.9931 ms 1.9991 ms]
+                        thrpt:  [496.97 MiB/s 498.45 MiB/s 500.06 MiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+Benchmarking write/write_table_rows/100000
+Benchmarking write/write_table_rows/100000: Warming up for 3.0000 s
+Benchmarking write/write_table_rows/100000: Collecting 100 samples in estimated 5.4836 s (300 iterations)
+Benchmarking write/write_table_rows/100000: Analyzing
+write/write_table_rows/100000
+                        time:   [17.727 ms 17.818 ms 17.911 ms]
+                        thrpt:  [558.64 MiB/s 561.55 MiB/s 564.42 MiB/s]
+Benchmarking write/encode_then_write_table/100000
+Benchmarking write/encode_then_write_table/100000: Warming up for 3.0000 s
+Benchmarking write/encode_then_write_table/100000: Collecting 100 samples in estimated 5.0856 s (300 iterations)
+Benchmarking write/encode_then_write_table/100000: Analyzing
+write/encode_then_write_table/100000
+                        time:   [17.508 ms 17.668 ms 17.884 ms]
+                        thrpt:  [559.48 MiB/s 566.32 MiB/s 571.49 MiB/s]
+Found 4 outliers among 100 measurements (4.00%)
+  1 (1.00%) high mild
+  3 (3.00%) high severe
+
+Benchmarking read/read_table_rows/1000
+Benchmarking read/read_table_rows/1000: Warming up for 3.0000 s
+Benchmarking read/read_table_rows/1000: Collecting 100 samples in estimated 5.7417 s (10k iterations)
+Benchmarking read/read_table_rows/1000: Analyzing
+read/read_table_rows/1000
+                        time:   [568.47 µs 569.43 µs 570.63 µs]
+                        thrpt:  [173.71 MiB/s 174.07 MiB/s 174.37 MiB/s]
+Found 4 outliers among 100 measurements (4.00%)
+  2 (2.00%) high mild
+  2 (2.00%) high severe
+Benchmarking read/read_table/1000
+Benchmarking read/read_table/1000: Warming up for 3.0000 s
+Benchmarking read/read_table/1000: Collecting 100 samples in estimated 6.2468 s (25k iterations)
+Benchmarking read/read_table/1000: Analyzing
+read/read_table/1000    time:   [245.54 µs 246.23 µs 246.91 µs]
+                        thrpt:  [401.44 MiB/s 402.55 MiB/s 403.69 MiB/s]
+Found 3 outliers among 100 measurements (3.00%)
+  1 (1.00%) low mild
+  2 (2.00%) high severe
+Benchmarking read/read_table_rows/10000
+Benchmarking read/read_table_rows/10000: Warming up for 3.0000 s
+Benchmarking read/read_table_rows/10000: Collecting 100 samples in estimated 5.2574 s (1100 iterations)
+Benchmarking read/read_table_rows/10000: Analyzing
+read/read_table_rows/10000
+                        time:   [4.8508 ms 4.8611 ms 4.8721 ms]
+                        thrpt:  [203.91 MiB/s 204.37 MiB/s 204.81 MiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+Benchmarking read/read_table/10000
+Benchmarking read/read_table/10000: Warming up for 3.0000 s
+
+Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 7.9s, enable flat sampling, or reduce sample count to 50.
+Benchmarking read/read_table/10000: Collecting 100 samples in estimated 7.9312 s (5050 iterations)
+Benchmarking read/read_table/10000: Analyzing
+read/read_table/10000   time:   [1.5894 ms 1.5953 ms 1.6019 ms]
+                        thrpt:  [620.21 MiB/s 622.74 MiB/s 625.07 MiB/s]
+Found 7 outliers among 100 measurements (7.00%)
+  4 (4.00%) high mild
+  3 (3.00%) high severe
+Benchmarking read/read_table_rows/100000
+Benchmarking read/read_table_rows/100000: Warming up for 3.0000 s
+Benchmarking read/read_table_rows/100000: Collecting 100 samples in estimated 9.9046 s (200 iterations)
+Benchmarking read/read_table_rows/100000: Analyzing
+read/read_table_rows/100000
+                        time:   [50.890 ms 51.407 ms 51.960 ms]
+                        thrpt:  [192.56 MiB/s 194.64 MiB/s 196.61 MiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking read/read_table/100000
+Benchmarking read/read_table/100000: Warming up for 3.0000 s
+Benchmarking read/read_table/100000: Collecting 100 samples in estimated 6.5202 s (400 iterations)
+Benchmarking read/read_table/100000: Analyzing
+read/read_table/100000  time:   [16.408 ms 16.490 ms 16.574 ms]
+                        thrpt:  [603.71 MiB/s 606.76 MiB/s 609.81 MiB/s]
+

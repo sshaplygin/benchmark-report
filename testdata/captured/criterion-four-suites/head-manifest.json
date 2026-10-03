@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "revision": "c7caaa65bf2c7b9b7c3d339c06929a9046c27368",
+  "environment": {
+    "toolchain": "rust1.94.0",
+    "os": "linux",
+    "arch": "amd64",
+    "runner": "github-hosted:ubuntu-24.04"
+  },
+  "expected_suites": [
+    "client",
+    "job",
+    "skiff",
+    "yson"
+  ],
+  "suites": [
+    {
+      "id": "client",
+      "parser": {
+        "name": "criterion",
+        "version": "1"
+      },
+      "command": "cargo bench --locked -p ytsaurus-client --bench rows -- --noplot",
+      "files": [
+        "criterion-main-vs-pr-client/pr/benchmarks.txt"
+      ]
+    },
+    {
+      "id": "job",
+      "parser": {
+        "name": "criterion",
+        "version": "1"
+      },
+      "command": "cargo bench --locked -p ytsaurus-job --bench job_throughput -- --noplot",
+      "files": [
+        "criterion-main-vs-pr-job/pr/benchmarks.txt"
+      ]
+    },
+    {
+      "id": "skiff",
+      "parser": {
+        "name": "criterion",
+        "version": "1"
+      },
+      "command": "cargo bench --locked -p ytsaurus-skiff --bench codec_throughput -- --noplot",
+      "files": [
+        "criterion-main-vs-pr-skiff/pr/benchmarks.txt"
+      ]
+    },
+    {
+      "id": "yson",
+      "parser": {
+        "name": "criterion",
+        "version": "1"
+      },
+      "command": "cargo bench --locked -p ytsaurus-yson --bench yson_benchmark -- --noplot",
+      "files": [
+        "criterion-main-vs-pr-yson/pr/benchmarks.txt"
+      ]
+    }
+  ]
+}

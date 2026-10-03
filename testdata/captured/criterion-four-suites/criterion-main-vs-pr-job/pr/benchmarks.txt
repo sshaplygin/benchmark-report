@@ -1,0 +1,79 @@
+Benchmarking YSON job throughput/pass_through
+Benchmarking YSON job throughput/pass_through: Warming up for 3.0000 s
+Benchmarking YSON job throughput/pass_through: Collecting 20 samples in estimated 8.6690 s (420 iterations)
+Benchmarking YSON job throughput/pass_through: Analyzing
+YSON job throughput/pass_through
+                        time:   [20.601 ms 20.719 ms 20.862 ms]
+                        thrpt:  [847.39 MiB/s 853.21 MiB/s 858.10 MiB/s]
+Found 1 outliers among 20 measurements (5.00%)
+  1 (5.00%) high mild
+Benchmarking YSON job throughput/parse_borrowed
+Benchmarking YSON job throughput/parse_borrowed: Warming up for 3.0000 s
+Benchmarking YSON job throughput/parse_borrowed: Collecting 20 samples in estimated 5.2223 s (80 iterations)
+Benchmarking YSON job throughput/parse_borrowed: Analyzing
+YSON job throughput/parse_borrowed
+                        time:   [65.261 ms 65.449 ms 65.741 ms]
+                        thrpt:  [268.91 MiB/s 270.11 MiB/s 270.88 MiB/s]
+Found 1 outliers among 20 measurements (5.00%)
+  1 (5.00%) high severe
+Benchmarking YSON job throughput/parse_owned
+Benchmarking YSON job throughput/parse_owned: Warming up for 3.0000 s
+Benchmarking YSON job throughput/parse_owned: Collecting 20 samples in estimated 5.4939 s (80 iterations)
+Benchmarking YSON job throughput/parse_owned: Analyzing
+YSON job throughput/parse_owned
+                        time:   [68.447 ms 68.578 ms 68.704 ms]
+                        thrpt:  [257.31 MiB/s 257.78 MiB/s 258.27 MiB/s]
+Benchmarking YSON job throughput/parse_dynamic
+Benchmarking YSON job throughput/parse_dynamic: Warming up for 3.0000 s
+Benchmarking YSON job throughput/parse_dynamic: Collecting 20 samples in estimated 5.5842 s (60 iterations)
+Benchmarking YSON job throughput/parse_dynamic: Analyzing
+YSON job throughput/parse_dynamic
+                        time:   [92.079 ms 92.239 ms 92.432 ms]
+                        thrpt:  [191.26 MiB/s 191.66 MiB/s 191.99 MiB/s]
+Found 1 outliers among 20 measurements (5.00%)
+  1 (5.00%) high severe
+
+Benchmarking Skiff job throughput/skiff_dynamic
+Benchmarking Skiff job throughput/skiff_dynamic: Warming up for 3.0000 s
+Benchmarking Skiff job throughput/skiff_dynamic: Collecting 20 samples in estimated 5.7994 s (120 iterations)
+Benchmarking Skiff job throughput/skiff_dynamic: Analyzing
+Skiff job throughput/skiff_dynamic
+                        time:   [48.481 ms 48.540 ms 48.605 ms]
+                        thrpt:  [238.17 MiB/s 238.49 MiB/s 238.78 MiB/s]
+
+Benchmarking YSON vs Skiff dynamic job API/yson_dynamic
+Benchmarking YSON vs Skiff dynamic job API/yson_dynamic: Warming up for 3.0000 s
+Benchmarking YSON vs Skiff dynamic job API/yson_dynamic: Collecting 20 samples in estimated 5.9099 s (60 iterations)
+Benchmarking YSON vs Skiff dynamic job API/yson_dynamic: Analyzing
+YSON vs Skiff dynamic job API/yson_dynamic
+                        time:   [98.251 ms 98.563 ms 98.897 ms]
+                        thrpt:  [1.0111 Melem/s 1.0146 Melem/s 1.0178 Melem/s]
+Benchmarking YSON vs Skiff dynamic job API/skiff_dynamic
+Benchmarking YSON vs Skiff dynamic job API/skiff_dynamic: Warming up for 3.0000 s
+Benchmarking YSON vs Skiff dynamic job API/skiff_dynamic: Collecting 20 samples in estimated 5.8255 s (120 iterations)
+Benchmarking YSON vs Skiff dynamic job API/skiff_dynamic: Analyzing
+YSON vs Skiff dynamic job API/skiff_dynamic
+                        time:   [48.504 ms 48.673 ms 48.874 ms]
+                        thrpt:  [2.0461 Melem/s 2.0545 Melem/s 2.0617 Melem/s]
+Found 4 outliers among 20 measurements (20.00%)
+  3 (15.00%) high mild
+  1 (5.00%) high severe
+
+Benchmarking YSON vs Skiff dynamic encoding/yson_dynamic
+Benchmarking YSON vs Skiff dynamic encoding/yson_dynamic: Warming up for 3.0000 s
+Benchmarking YSON vs Skiff dynamic encoding/yson_dynamic: Collecting 20 samples in estimated 6.2756 s (80 iterations)
+Benchmarking YSON vs Skiff dynamic encoding/yson_dynamic: Analyzing
+YSON vs Skiff dynamic encoding/yson_dynamic
+                        time:   [77.119 ms 77.602 ms 78.071 ms]
+                        thrpt:  [1.2809 Melem/s 1.2886 Melem/s 1.2967 Melem/s]
+Benchmarking YSON vs Skiff dynamic encoding/skiff_dynamic
+Benchmarking YSON vs Skiff dynamic encoding/skiff_dynamic: Warming up for 3.0000 s
+Benchmarking YSON vs Skiff dynamic encoding/skiff_dynamic: Collecting 20 samples in estimated 9.2309 s (420 iterations)
+Benchmarking YSON vs Skiff dynamic encoding/skiff_dynamic: Analyzing
+YSON vs Skiff dynamic encoding/skiff_dynamic
+                        time:   [22.292 ms 22.341 ms 22.390 ms]
+                        thrpt:  [4.4662 Melem/s 4.4760 Melem/s 4.4860 Melem/s]
+Found 2 outliers among 20 measurements (10.00%)
+  1 (5.00%) low severe
+  1 (5.00%) low mild
+

@@ -1,0 +1,43 @@
+Benchmarking YSON Throughput/Serialize Binary
+Benchmarking YSON Throughput/Serialize Binary: Warming up for 3.0000 s
+
+Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 5.3s, enable flat sampling, or reduce sample count to 60.
+Benchmarking YSON Throughput/Serialize Binary: Collecting 100 samples in estimated 5.3157 s (5050 iterations)
+Benchmarking YSON Throughput/Serialize Binary: Analyzing
+YSON Throughput/Serialize Binary
+                        time:   [1.0508 ms 1.0513 ms 1.0519 ms]
+                        thrpt:  [1.1056 GiB/s 1.1062 GiB/s 1.1068 GiB/s]
+Found 8 outliers among 100 measurements (8.00%)
+  5 (5.00%) high mild
+  3 (3.00%) high severe
+Benchmarking YSON Throughput/Deserialize Binary
+Benchmarking YSON Throughput/Deserialize Binary: Warming up for 3.0000 s
+Benchmarking YSON Throughput/Deserialize Binary: Collecting 100 samples in estimated 5.4295 s (700 iterations)
+Benchmarking YSON Throughput/Deserialize Binary: Analyzing
+YSON Throughput/Deserialize Binary
+                        time:   [7.7596 ms 7.7679 ms 7.7765 ms]
+                        thrpt:  [153.14 MiB/s 153.31 MiB/s 153.48 MiB/s]
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking YSON Throughput/Serialize Text
+Benchmarking YSON Throughput/Serialize Text: Warming up for 3.0000 s
+Benchmarking YSON Throughput/Serialize Text: Collecting 100 samples in estimated 5.3560 s (1500 iterations)
+Benchmarking YSON Throughput/Serialize Text: Analyzing
+YSON Throughput/Serialize Text
+                        time:   [3.6147 ms 3.6207 ms 3.6272 ms]
+                        thrpt:  [236.05 MiB/s 236.47 MiB/s 236.86 MiB/s]
+Found 16 outliers among 100 measurements (16.00%)
+  1 (1.00%) low mild
+  13 (13.00%) high mild
+  2 (2.00%) high severe
+Benchmarking YSON Throughput/Deserialize Text
+Benchmarking YSON Throughput/Deserialize Text: Warming up for 3.0000 s
+Benchmarking YSON Throughput/Deserialize Text: Collecting 100 samples in estimated 5.8228 s (600 iterations)
+Benchmarking YSON Throughput/Deserialize Text: Analyzing
+YSON Throughput/Deserialize Text
+                        time:   [9.8237 ms 9.8350 ms 9.8479 ms]
+                        thrpt:  [86.942 MiB/s 87.056 MiB/s 87.155 MiB/s]
+Found 5 outliers among 100 measurements (5.00%)
+  1 (1.00%) high mild
+  4 (4.00%) high severe
+

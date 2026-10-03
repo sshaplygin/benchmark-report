@@ -1,0 +1,51 @@
+{
+  "id": 11267366782,
+  "node_id": "MDg6QXJ0aWZhY3QxMTI2NzM2Njc4Mg==",
+  "name": "go-benchmarks",
+  "size_in_bytes": 6279,
+  "url": "https://api.github.com/repos/sshaplygin/go-socket.io/actions/artifacts/11267366782",
+  "archive_download_url": "https://api.github.com/repos/sshaplygin/go-socket.io/actions/artifacts/11267366782/zip",
+  "expired": false,
+  "digest": "sha256:4caa77ffedb94ba1b9b48e6a1b2fba6e0895a9c4991581632f164f92441562a5",
+  "created_at": "2026-10-03T06:55:43Z",
+  "updated_at": "2026-10-03T06:55:43Z",
+  "expires_at": "2026-10-17T06:55:42Z",
+  "workflow_run": {
+    "id": 37104301673,
+    "repository_id": 211949787,
+    "head_repository_id": 211949787,
+    "head_branch": "ci/benchmark-report-format",
+    "head_sha": "89368c38fa1643cbac4478d34aa8d7c3ef38aff1"
+  },
+  "downloaded_archive_sha256": "4caa77ffedb94ba1b9b48e6a1b2fba6e0895a9c4991581632f164f92441562a5",
+  "members": [
+    {
+      "path": "go-benchmarks/base.txt",
+      "original_sha256": "eb39ed10c0d1ad1421247361ec11dddc82ef372ec5d19d70c8eec4dfb90ea6eb",
+      "size_bytes": 12637,
+      "trimmed": true,
+      "stored_sha256": "378b7372f8e469670823f7822144aa6c71d48796acc476167212736b0879aa62",
+      "stored_size_bytes": 11821
+    },
+    {
+      "path": "go-benchmarks/comparison.txt",
+      "original_sha256": "4d8f7bc8eb31198d0f6c0ae505a0eaceede6705698e7dfacd17f7e7f8710a250",
+      "size_bytes": 4923,
+      "trimmed": false
+    },
+    {
+      "path": "go-benchmarks/pr.txt",
+      "original_sha256": "d3ca276f5c9fb19d57000b40acb4c57d982a8cceaf70fe2a3313364ffdb344e1",
+      "size_bytes": 12637,
+      "trimmed": true,
+      "stored_sha256": "bc1953ac5f4665aeb0dbe0f958278fb5261d86aa2bfa037bc630328e46a54c1b",
+      "stored_size_bytes": 11821
+    },
+    {
+      "path": "go-benchmarks/benchmark-report.md",
+      "original_sha256": "ff4977135ba2202c55aab041544f98795c644b1417d7cd6537d793674a873bd8",
+      "size_bytes": 6824,
+      "trimmed": false
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+PASS
+No benchmark measurements in this synthetic harness log.

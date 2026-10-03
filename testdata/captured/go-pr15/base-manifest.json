@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "revision": "79a393cf6e5e299fd4faa8e02225f2632e0ea6e8",
+  "environment": {
+    "toolchain": "go1.27.1",
+    "os": "linux",
+    "arch": "amd64",
+    "runner": "github-hosted:ubuntu-24.04"
+  },
+  "expected_suites": [
+    "go"
+  ],
+  "suites": [
+    {
+      "id": "go",
+      "parser": {
+        "name": "go",
+        "version": "1"
+      },
+      "command": "go test -mod=readonly -run '^$' -bench . -benchmem -count=10 ./...",
+      "files": [
+        "go-benchmarks/base.txt"
+      ]
+    }
+  ]
+}

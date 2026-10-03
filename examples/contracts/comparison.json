@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "base": {
+    "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "environment": {
+      "toolchain": "go1.25.0",
+      "os": "linux",
+      "arch": "amd64",
+      "runner": "fixture runner"
+    }
+  },
+  "head": {
+    "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "environment": {
+      "toolchain": "go1.25.0",
+      "os": "linux",
+      "arch": "amd64",
+      "runner": "fixture runner"
+    }
+  },
+  "generator": {
+    "name": "benchreport",
+    "version": "0.1.0-dev"
+  },
+  "policy": {
+    "regression_percent": 20,
+    "improvement_percent": 20,
+    "percent_decimals": 1,
+    "fail_on_regression": false,
+    "statistics": "none"
+  },
+  "environment_override": {
+    "allowed": false,
+    "mismatched_fields": []
+  },
+  "rows": [
+    {
+      "key": "[\"example\",\"example.org/bench\",\"BenchmarkSmall-4\",\"time\"]",
+      "identity": {
+        "suite": "example",
+        "package": "example.org/bench",
+        "benchmark": "BenchmarkSmall-4",
+        "metric": "time"
+      },
+      "definition": {
+        "unit": "ns/op",
+        "direction": "lower",
+        "estimator": "median"
+      },
+      "base": {
+        "key": "[\"example\",\"example.org/bench\",\"BenchmarkSmall-4\",\"time\"]",
+        "identity": {
+          "suite": "example",
+          "package": "example.org/bench",
+          "benchmark": "BenchmarkSmall-4",
+          "metric": "time"
+        },
+        "definition": {
+          "unit": "ns/op",
+          "direction": "lower",
+          "estimator": "median"
+        },
+        "estimate": "2.5",
+        "samples": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      },
+      "head": {
+        "key": "[\"example\",\"example.org/bench\",\"BenchmarkSmall-4\",\"time\"]",
+        "identity": {
+          "suite": "example",
+          "package": "example.org/bench",
+          "benchmark": "BenchmarkSmall-4",
+          "metric": "time"
+        },
+        "definition": {
+          "unit": "ns/op",
+          "direction": "lower",
+          "estimator": "median"
+        },
+        "estimate": "3",
+        "samples": [
+          "2",
+          "3",
+          "3",
+          "4"
+        ]
+      },
+      "delta_percent": "20",
+      "reason": "comparable",
+      "signal": "regression"
+    }
+  ],
+  "statistics": null,
+  "gate": "disabled"
+}

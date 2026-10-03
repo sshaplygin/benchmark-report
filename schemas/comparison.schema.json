@@ -1,0 +1,878 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sshaplygin.github.io/benchmark-report/schemas/comparison.schema.json",
+  "title": "comparison version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "base": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "toolchain": {
+              "type": "string",
+              "minLength": 1
+            },
+            "os": {
+              "type": "string",
+              "minLength": 1
+            },
+            "arch": {
+              "type": "string",
+              "minLength": 1
+            },
+            "runner": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "toolchain",
+            "os",
+            "arch",
+            "runner"
+          ]
+        }
+      },
+      "required": [
+        "revision",
+        "environment"
+      ]
+    },
+    "head": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "revision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "toolchain": {
+              "type": "string",
+              "minLength": 1
+            },
+            "os": {
+              "type": "string",
+              "minLength": 1
+            },
+            "arch": {
+              "type": "string",
+              "minLength": 1
+            },
+            "runner": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "toolchain",
+            "os",
+            "arch",
+            "runner"
+          ]
+        }
+      },
+      "required": [
+        "revision",
+        "environment"
+      ]
+    },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ]
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "regression_percent": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "improvement_percent": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "percent_decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "fail_on_regression": {
+          "type": "boolean"
+        },
+        "statistics": {
+          "enum": [
+            "none",
+            "benchstat"
+          ]
+        }
+      },
+      "required": [
+        "regression_percent",
+        "improvement_percent",
+        "percent_decimals",
+        "fail_on_regression",
+        "statistics"
+      ]
+    },
+    "environment_override": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "type": "boolean"
+        },
+        "mismatched_fields": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "toolchain",
+              "os",
+              "arch",
+              "runner"
+            ]
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "allowed",
+        "mismatched_fields"
+      ]
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "identity": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "suite": {
+                "type": "string",
+                "minLength": 1
+              },
+              "package": {
+                "type": "string"
+              },
+              "benchmark": {
+                "type": "string",
+                "minLength": 1
+              },
+              "metric": {
+                "enum": [
+                  "time",
+                  "bytes",
+                  "allocations",
+                  "throughput"
+                ]
+              }
+            },
+            "required": [
+              "suite",
+              "package",
+              "benchmark",
+              "metric"
+            ]
+          },
+          "definition": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "enum": [
+                      "ns/op"
+                    ]
+                  },
+                  "direction": {
+                    "enum": [
+                      "lower"
+                    ]
+                  },
+                  "estimator": {
+                    "enum": [
+                      "median",
+                      "criterion-point-estimate"
+                    ]
+                  }
+                },
+                "required": [
+                  "unit",
+                  "direction",
+                  "estimator"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "enum": [
+                      "B/op"
+                    ]
+                  },
+                  "direction": {
+                    "enum": [
+                      "lower"
+                    ]
+                  },
+                  "estimator": {
+                    "enum": [
+                      "median",
+                      "criterion-point-estimate"
+                    ]
+                  }
+                },
+                "required": [
+                  "unit",
+                  "direction",
+                  "estimator"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "enum": [
+                      "allocs/op"
+                    ]
+                  },
+                  "direction": {
+                    "enum": [
+                      "lower"
+                    ]
+                  },
+                  "estimator": {
+                    "enum": [
+                      "median",
+                      "criterion-point-estimate"
+                    ]
+                  }
+                },
+                "required": [
+                  "unit",
+                  "direction",
+                  "estimator"
+                ]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "enum": [
+                      "B/s"
+                    ]
+                  },
+                  "direction": {
+                    "enum": [
+                      "higher"
+                    ]
+                  },
+                  "estimator": {
+                    "enum": [
+                      "median",
+                      "criterion-point-estimate"
+                    ]
+                  }
+                },
+                "required": [
+                  "unit",
+                  "direction",
+                  "estimator"
+                ]
+              }
+            ]
+          },
+          "base": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "identity": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "suite": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "package": {
+                        "type": "string"
+                      },
+                      "benchmark": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "metric": {
+                        "enum": [
+                          "time",
+                          "bytes",
+                          "allocations",
+                          "throughput"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "suite",
+                      "package",
+                      "benchmark",
+                      "metric"
+                    ]
+                  },
+                  "definition": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "unit": {
+                            "enum": [
+                              "ns/op"
+                            ]
+                          },
+                          "direction": {
+                            "enum": [
+                              "lower"
+                            ]
+                          },
+                          "estimator": {
+                            "enum": [
+                              "median",
+                              "criterion-point-estimate"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "unit",
+                          "direction",
+                          "estimator"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "unit": {
+                            "enum": [
+                              "B/op"
+                            ]
+                          },
+                          "direction": {
+                            "enum": [
+                              "lower"
+                            ]
+                          },
+                          "estimator": {
+                            "enum": [
+                              "median",
+                              "criterion-point-estimate"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "unit",
+                          "direction",
+                          "estimator"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "unit": {
+                            "enum": [
+                              "allocs/op"
+                            ]
+                          },
+                          "direction": {
+                            "enum": [
+                              "lower"
+                            ]
+                          },
+                          "estimator": {
+                            "enum": [
+                              "median",
+                              "criterion-point-estimate"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "unit",
+                          "direction",
+                          "estimator"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "unit": {
+                            "enum": [
+                              "B/s"
+                            ]
+                          },
+                          "direction": {
+                            "enum": [
+                              "higher"
+                            ]
+                          },
+                          "estimator": {
+                            "enum": [
+                              "median",
+                              "criterion-point-estimate"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "unit",
+                          "direction",
+                          "estimator"
+                        ]
+                      }
+                    ]
+                  },
+                  "estimate": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$"
+                  },
+                  "samples": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$"
+                    },
+                    "minItems": 1
+                  },
+                  "bounds": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "lower": {
+                        "type": "string",
+                        "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$"
+                      },
+                      "upper": {
+                        "type": "string",
+                        "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$"
+                      }
+                    },
+                    "required": [
+                      "lower",
+                      "upper"
+                    ]
+                  }
+                },
+                "required": [
+                  "key",
+                  "identity",
+                  "definition",
+                  "estimate"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "head": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "identity": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "suite": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "package": {
+                        "type": "string"
+                      },
+                      "benchmark": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "metric": {
+                        "enum": [
+                          "time",
+                          "bytes",
+                          "allocations",
+                          "throughput"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "suite",
+                      "package",
+                      "benchmark",
+                      "metric"
+                    ]
+                  },
+                  "definition": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "unit": {
+                            "enum": [
+                              "ns/op"
+                            ]
+                          },
+                          "direction": {
+                            "enum": [
+                              "lower"
+                            ]
+                          },
+                          "estimator": {
+                            "enum": [
+                              "median",
+                              "criterion-point-estimate"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "unit",
+                          "direction",
+                          "estimator"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "unit": {
+                            "enum": [
+                              "B/op"
+                            ]
+                          },
+                          "direction": {
+                            "enum": [
+                              "lower"
+                            ]
+                          },
+                          "estimator": {
+                            "enum": [
+                              "median",
+                              "criterion-point-estimate"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "unit",
+                          "direction",
+                          "estimator"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "unit": {
+                            "enum": [
+                              "allocs/op"
+                            ]
+                          },
+                          "direction": {
+                            "enum": [
+                              "lower"
+                            ]
+                          },
+                          "estimator": {
+                            "enum": [
+                              "median",
+                              "criterion-point-estimate"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "unit",
+                          "direction",
+                          "estimator"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "unit": {
+                            "enum": [
+                              "B/s"
+                            ]
+                          },
+                          "direction": {
+                            "enum": [
+                              "higher"
+                            ]
+                          },
+                          "estimator": {
+                            "enum": [
+                              "median",
+                              "criterion-point-estimate"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "unit",
+                          "direction",
+                          "estimator"
+                        ]
+                      }
+                    ]
+                  },
+                  "estimate": {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$"
+                  },
+                  "samples": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$"
+                    },
+                    "minItems": 1
+                  },
+                  "bounds": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "lower": {
+                        "type": "string",
+                        "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$"
+                      },
+                      "upper": {
+                        "type": "string",
+                        "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$"
+                      }
+                    },
+                    "required": [
+                      "lower",
+                      "upper"
+                    ]
+                  }
+                },
+                "required": [
+                  "key",
+                  "identity",
+                  "definition",
+                  "estimate"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "delta_percent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]*[1-9])?$|^-(?:[1-9][0-9]*(?:\\.[0-9]*[1-9])?|0\\.[0-9]*[1-9])$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "enum": [
+              "comparable",
+              "zero_baseline",
+              "added",
+              "removed"
+            ]
+          },
+          "signal": {
+            "enum": [
+              "regression",
+              "improvement",
+              "below_threshold",
+              "not_comparable"
+            ]
+          }
+        },
+        "required": [
+          "key",
+          "identity",
+          "definition",
+          "base",
+          "head",
+          "delta_percent",
+          "reason",
+          "signal"
+        ]
+      },
+      "minItems": 1
+    },
+    "statistics": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "tool": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "version": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "name",
+                  "version"
+                ]
+              },
+              "executable_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "suite": {
+                "type": "string",
+                "minLength": 1
+              },
+              "arguments": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 0
+              },
+              "inputs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "side": {
+                      "enum": [
+                        "base",
+                        "head"
+                      ]
+                    },
+                    "suite": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "path": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "sha256": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    }
+                  },
+                  "required": [
+                    "side",
+                    "suite",
+                    "path",
+                    "sha256"
+                  ]
+                },
+                "minItems": 2
+              },
+              "stdout": {
+                "type": "string"
+              },
+              "stderr": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tool",
+              "executable_sha256",
+              "suite",
+              "arguments",
+              "inputs",
+              "stdout",
+              "stderr"
+            ]
+          },
+          "minItems": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "gate": {
+      "enum": [
+        "disabled",
+        "passed",
+        "failed"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "base",
+    "head",
+    "generator",
+    "policy",
+    "environment_override",
+    "rows",
+    "statistics",
+    "gate"
+  ]
+}

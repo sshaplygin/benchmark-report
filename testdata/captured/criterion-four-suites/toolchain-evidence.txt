@@ -1,0 +1,4 @@
+HTTP client: main vs PR	UNKNOWN STEP	2026-10-03T06:02:08.2334068Z 1.94.0-x86_64-unknown-linux-gnu (overridden by '/home/runner/work/ytsaurus-rs/ytsaurus-rs/pr/rust-toolchain.toml')
+job path: main vs PR	UNKNOWN STEP	2026-10-03T06:02:09.8113846Z 1.94.0-x86_64-unknown-linux-gnu (overridden by '/home/runner/work/ytsaurus-rs/ytsaurus-rs/pr/rust-toolchain.toml')
+Skiff codec: main vs PR	UNKNOWN STEP	2026-10-03T06:02:05.1017501Z 1.94.0-x86_64-unknown-linux-gnu (overridden by '/home/runner/work/ytsaurus-rs/ytsaurus-rs/pr/rust-toolchain.toml')
+YSON codec: main vs PR	UNKNOWN STEP	2026-10-03T06:02:06.5139574Z 1.94.0-x86_64-unknown-linux-gnu (overridden by '/home/runner/work/ytsaurus-rs/ytsaurus-rs/pr/rust-toolchain.toml')

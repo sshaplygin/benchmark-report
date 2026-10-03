@@ -1,0 +1,55 @@
+{
+  "cases": [
+    {
+      "id": "head-only",
+      "expected_reason": "added",
+      "percent": null,
+      "expected_signal": "not_comparable"
+    },
+    {
+      "id": "base-only",
+      "expected_reason": "removed",
+      "percent": null,
+      "expected_signal": "not_comparable"
+    },
+    {
+      "id": "missing-suite",
+      "expected": "input failure, not removed rows"
+    },
+    {
+      "id": "missing-file",
+      "expected": "input failure, not removed rows"
+    },
+    {
+      "id": "different-estimator",
+      "expected": "definition compatibility failure even with environment override"
+    },
+    {
+      "id": "different-unit",
+      "expected": "definition compatibility failure even with environment override"
+    },
+    {
+      "id": "different-direction",
+      "expected": "definition compatibility failure even with environment override"
+    },
+    {
+      "id": "different-toolchain",
+      "expected": "failure by default; override allows advisory comparison with field disclosure"
+    }
+  ],
+  "identity_collision_pairs": [
+    [
+      "a|b",
+      "c",
+      "d",
+      "time"
+    ],
+    [
+      "a",
+      "b|c",
+      "d",
+      "time"
+    ]
+  ],
+  "expected": "distinct JSON-array canonical keys"
+}

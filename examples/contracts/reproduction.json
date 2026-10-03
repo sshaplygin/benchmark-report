@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "generator": {
+    "name": "benchreport",
+    "version": "0.1.0-dev"
+  },
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "base": {
+    "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "environment": {
+      "toolchain": "go1.25.0",
+      "os": "linux",
+      "arch": "amd64",
+      "runner": "fixture runner"
+    }
+  },
+  "head": {
+    "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "environment": {
+      "toolchain": "go1.25.0",
+      "os": "linux",
+      "arch": "amd64",
+      "runner": "fixture runner"
+    }
+  },
+  "configuration_sha256": "cba2e027925c2a8c9b0ccbe58ab575a62b3651db29d639598ca1aeedd639ad8a",
+  "files": [
+    {
+      "path": "input-manifest.json",
+      "sha256": "5cd605b739c13b1a29e392f4019aa9f2c22ce6a87fda5fce97196afb2b7b67e9",
+      "role": "manifest"
+    },
+    {
+      "path": "normalized-run.json",
+      "sha256": "ad5507ddfa63c6d8b95d27b9de2d6af39d999cc94c06da02db312a91f828e9fc",
+      "role": "normalized"
+    },
+    {
+      "path": "comparison.json",
+      "sha256": "62acc48afed9c1e4ddd5fc4b6abb6b63d7ef57cc6a45ab6a99df0e30d47a737e",
+      "role": "comparison"
+    },
+    {
+      "path": "presentation.json",
+      "sha256": "8af834d2338014f84aeb02216d7bb53a72fd36360389a25d61bb263d1b823f4b",
+      "role": "presentation"
+    },
+    {
+      "path": "configuration.json",
+      "sha256": "cba2e027925c2a8c9b0ccbe58ab575a62b3651db29d639598ca1aeedd639ad8a",
+      "role": "configuration"
+    }
+  ],
+  "statistics": null,
+  "replay": {
+    "render": [
+      "benchreport render --input comparison.json --config configuration.json --output-dir out"
+    ],
+    "verify": [
+      "benchreport normalize --parser go --manifest input-manifest.json --out normalized-run.json"
+    ]
+  }
+}

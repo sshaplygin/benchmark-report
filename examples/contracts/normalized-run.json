@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "environment": {
+    "toolchain": "go1.25.0",
+    "os": "linux",
+    "arch": "amd64",
+    "runner": "fixture runner"
+  },
+  "expected_suites": [
+    "example"
+  ],
+  "suites": [
+    {
+      "id": "example",
+      "parser": {
+        "name": "go",
+        "version": "1"
+      },
+      "command": "go test -run=^$ -bench=. -benchmem -count=4",
+      "files": [
+        "base.txt"
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "suite": "example",
+      "path": "base.txt",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "measurements": [
+    {
+      "key": "[\"example\",\"example.org/bench\",\"BenchmarkSmall-4\",\"time\"]",
+      "identity": {
+        "suite": "example",
+        "package": "example.org/bench",
+        "benchmark": "BenchmarkSmall-4",
+        "metric": "time"
+      },
+      "definition": {
+        "unit": "ns/op",
+        "direction": "lower",
+        "estimator": "median"
+      },
+      "estimate": "2.5",
+      "samples": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ]
+    }
+  ]
+}
