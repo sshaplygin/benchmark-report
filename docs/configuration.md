@@ -1,12 +1,14 @@
 # Configuration
 
-This document owns the version 1 configuration contract; configuration loading and validation are implemented, rendering and history export are implemented. The first release uses JSON to allow strict decoding and schema validation without a YAML parser. The [complete example](../examples/benchmark-report.json) selects a package-oriented Markdown report and history export.
+Configuration is version 1 JSON. The [complete example](../examples/benchmark-report.json) selects Go timing tables, benchstat details, and history export.
 
 ## Loading and validation
 
-Configuration has `schema_version: 1`. Unknown fields, duplicate keys, invalid enum values, invalid regular expressions, unsupported schema versions, and wrong value types are errors. JSON integers follow mathematical JSON Schema semantics: `1`, `1.0`, and `1e0` represent the same integer. Comparison thresholds retain exact decimal source text; tokens and canonical threshold values have the [4096-character defensive limit](contracts.md#exact-values-and-identities), with source exponents limited to -10000 through 10000. Defaults apply only to absent fields. An empty string is not an absent path. `benchreport config validate` must validate without reading benchmark files or using the network.
+The [shared validation rules](contracts.md#schemas-and-validation) apply, including rejection of unsupported versions and unknown or duplicate fields. Invalid field values and regular expressions fail validation. JSON integers follow mathematical JSON Schema semantics: `1`, `1.0`, and `1e0` represent the same integer. Thresholds follow the [exact numeric limits](contracts.md#exact-values-and-identities).
 
-Configuration paths resolve relative to its file. The output directory is selected by CLI. Configured filenames must be relative, stay within that directory, and be unique across all enabled outputs after Unicode NFC normalization and case folding. File/directory prefix collisions follow the same rule. The fixed reproduction paths in [Contracts](contracts.md#reproduction-layout) are reserved and cannot be configured as report or enabled history filenames. Reject traversal and symlink escapes when writing. Tokens, repository credentials, and executable commands are not configuration fields.
+Defaults apply only to absent fields. An empty path is invalid. `benchreport config validate` reads no benchmark files, uses no network, and writes no output files.
+
+The CLI selects the output directory. Configured filenames follow the [output path and reserved-name rules](contracts.md#reproduction-layout). Tokens, repository credentials, and executable commands are not configuration fields.
 
 CLI flags select input files, the output directory, and explicitly documented operational overrides. They do not silently override comparison policy. Every comparison records the effective policy; every reproduction bundle records the full effective configuration.
 
@@ -38,7 +40,7 @@ The exact comparison and zero-baseline behavior is defined in [Architecture](arc
 | `report.max_rows` | `0` | Nonnegative integer; zero means no user limit, otherwise a global limit after sorting |
 | `report.units` | `"auto"` | `auto` or `canonical`; auto uses one readable unit for both values in each row |
 
-The canonical key is the JSON array serialization of `[suite, package, benchmark, metric]` with no insignificant whitespace. Filters use Go regular expressions and case-sensitive matching. JSON encoding avoids collisions between names that contain separators. Examples and `normalize` diagnostics must expose the key so users can test filters.
+Filters use Go regular expressions and case-sensitive matching against the complete [canonical key](contracts.md#exact-values-and-identities).
 
 Apply selection in this order: metrics, include, exclude, unchanged/missing visibility, sort, row limit, grouping. Summary counts describe selected rows before the row limit and display the selected/total measurement counts. A row limit shows how many selected rows were omitted. A report with no selected rows says so and still records total input counts. Filtering does not create an empty-input success during normalization.
 
@@ -57,7 +59,7 @@ When `metric` is absent from both grouping and columns, more than one selected m
 
 Markdown uses GitHub-flavored tables and `details` for optional statistical output. `report.json` is a versioned presentation model containing selected rows, section settings, display values, and summary counts. It is distinct from the complete `comparison.json` calculation artifact. At least one output format must be enabled.
 
-Mandatory disclosures survive section switches: environment mismatch overrides, omitted-row counts, and the distinction between advisory signals and statistical evidence. Arbitrary templates, raw HTML injection, PDF, and standalone HTML rendering are not first-release features. Requests for those formats should extend the renderer contract without changing the comparison model.
+Environment mismatch overrides, omitted-row counts, and the distinction between advisory signals and statistical evidence remain visible regardless of section switches. Arbitrary templates, raw HTML injection, PDF, and standalone HTML rendering are unsupported.
 
 ## History export
 
@@ -70,15 +72,12 @@ Mandatory disclosures survive section switches: environment mismatch overrides, 
 | `history.smaller_file` | `"benchmark-smaller.json"` | Relative output filename |
 | `history.bigger_file` | `"benchmark-bigger.json"` | Relative output filename |
 
-History selection is independent of report selection. Hiding a row in a PR comment must not remove that metric from its historical series. Export only nonempty direction groups and return their paths explicitly; remove an obsolete file only at the currently configured empty-direction filename in a reused output directory so a caller cannot upload stale data. Cleanup and writes commit together; older names and unrelated files are not searched or removed. Callers consume the returned `files.smaller` and `files.bigger` paths. Disabled history and enabled selection yielding no metrics both fail explicitly.
+History selection is independent of report selection. Hiding a row in a PR report does not remove it from history. Export requires enabled history and a nonempty selection. [Contracts](contracts.md#history-serialization-and-outputs) defines returned paths, empty-direction cleanup, and numeric compatibility.
 
-History numbers must retain their exact decimal value through the upstream binary64 shortest-decimal round trip; incompatible values fail with their identity. This restriction is specific to history, as described in [Contracts](contracts.md#history-serialization-and-outputs). Exported `name` is the canonical measurement key. Units and estimator definitions stay fixed for a series. Changing display precision or report titles does not change exported measurements. The [integration contract](architecture.md#history-integration) owns the caller's action settings and series separation.
+Display precision and report titles do not change exported measurements. [History](history.md) defines series profiles and caller action settings.
 
 ## Example profiles
 
 Use the checked-in example for Go timing tables and full benchstat details. For Criterion, set `comparison.statistics` to `none` and `report.sections.benchstat` to false. For a machine-readable-only report, set `outputs.markdown` to null. For allocation analysis, select `allocations` and `bytes` and include `metric` in grouping or columns.
 
-These are configuration changes to the same CLI. No consumer-specific renderer or configuration interpreter is required.
-
-
-Full `report` bundles reserve comparison/comment files and raw, manifest, normalized, and statistics namespaces as specified in [Contracts](contracts.md#full-report-and-calculation-replay). These operational bundle paths do not change comparison or history policy. Full report/replay require an absent or empty destination; standalone render/export retain their documented directory reuse behavior. Comment header and artifact URL are operational CLI inputs recorded for reproducibility, rather than configuration policy fields.
+Comment header and artifact URL are operational [CLI inputs](contracts.md#full-report-and-calculation-replay), recorded for replay rather than comparison policy.

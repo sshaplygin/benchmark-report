@@ -1,8 +1,8 @@
 # Output examples
 
-These Markdown examples are checked against the renderer goldens. Their measurements, revisions, and environments are synthetic. Reports from captured consumer logs are available in the [Go golden](../internal/render/testdata/golden/captured-go.md) and [Criterion golden](../internal/render/testdata/golden/captured-criterion.md); their provenance is recorded in [Fixtures](fixtures.md). The CLI has not been released.
+These Markdown examples are checked against the renderer goldens. Their measurements, revisions, and environments are synthetic. Reports from captured consumer logs are available in the [Go golden](../internal/render/testdata/golden/captured-go.md) and [Criterion golden](../internal/render/testdata/golden/captured-criterion.md); their provenance is recorded in [Fixtures](fixtures.md).
 
-Each configuration block is a complete configuration with unspecified fields taking their [documented defaults](configuration.md). The calculation rules remain in [Architecture](architecture.md#comparison). The examples do not define additional settings or output schemas.
+Configuration blocks use the [documented defaults](configuration.md) for omitted fields. [Architecture](architecture.md#comparison) defines the calculation rules.
 
 ## Go timing report
 
@@ -50,7 +50,7 @@ Advisory thresholds: 20% regression, 20% improvement. No statistical analysis wa
 | RemovedDecoder-4 | 700 ns | — | — | removed |
 | ZeroBaseline-4 | 0 ns | 5 ns | — | zero baseline |
 
-The optional benchstat section is disabled in this example. With the [Go example configuration](../examples/benchmark-report.json), the report also includes an expandable section containing the actual, unmodified benchstat output. The [existing consumer report](https://github.com/sshaplygin/go-socket.io/pull/15#issuecomment-5966539113) demonstrates that section. No p-values are inferred from the synthetic timing estimates here.
+The optional benchstat section is disabled in this example. With the [Go example configuration](../examples/benchmark-report.json), the report also includes an expandable section containing the actual, unmodified benchstat output. See [Used by](../README.md#used-by) for live consumer reports. No p-values are inferred from the synthetic timing estimates here.
 
 ## Compact report
 

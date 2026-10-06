@@ -1,148 +1,82 @@
 # Benchmark Report
 
-Benchmark Report provides a composite GitHub Action that publishes a prepared Markdown report through `sticky-pull-request-comment`. The Go CLI normalizes and compares Go benchmark text and Rust Criterion logs, renders configurable Markdown/JSON, verifies offline replay bundles, and exports absolute measurements for benchmark history. See the [generator action](docs/report-action.md) for installation and workflow configuration.
+Compare Go benchmarks and Rust Criterion results, publish a configurable PR report, and reproduce it locally from archived inputs. The Go CLI generates Markdown and JSON; the GitHub Actions install the CLI and publish reports through [sticky-pull-request-comment](https://github.com/marocchino/sticky-pull-request-comment).
 
-See [output examples](docs/output-examples.md) for Go and Criterion reports, a compact report, allocation and throughput tables, and history JSON.
+See [output examples](docs/output-examples.md) for rendered reports and configuration variants.
 
-## Why build this
+## Why this tool
 
-The initial consumers are `sshaplygin/go-socket.io` and `sshaplygin/ytsaurus-rs`. Both compare the PR base and head on the same runner, but maintain separate formatting and publication code. The required presentation is illustrated by the [Go benchmark comment in PR 15](https://github.com/sshaplygin/go-socket.io/pull/15#issuecomment-5966539113): package tables, timing estimates, percentage changes, advisory signals, and expandable benchstat results.
+[github-action-benchmark](https://github.com/benchmark-action/github-action-benchmark) provides historical comparisons and charts. Its tested version has [fixed Markdown rendering](https://github.com/benchmark-action/github-action-benchmark/blob/4322e5726e6334590d251fc4f92bec0efafc45dc/dist/src/write.js) and [no report-template input](https://github.com/benchmark-action/github-action-benchmark/blob/4322e5726e6334590d251fc4f92bec0efafc45dc/action.yml).
 
-Existing tools cover parts of this workflow:
+Benchmark Report handles explicit base/head inputs, configurable tables shared by Go and Criterion, and offline reproduction of the calculations and report. Comment updates use sticky-pull-request-comment. Optional history export feeds github-action-benchmark for storage and charts.
 
-| Existing solution | Useful capability | Gap for this project |
-| --- | --- | --- |
-| [github-action-benchmark](https://github.com/benchmark-action/github-action-benchmark) | Benchmark history, GitHub Pages charts, configurable alerts, Go and Rust input | Its comment layout is implemented in code. It has no report template input or standalone file-to-report CLI. Its normal comparison uses a stored previous run; the consumers require an explicit base/head pair. |
-| [gobenchdata](https://github.com/bobheadxi/gobenchdata) | Go CLI, Go benchmark processing, history and visualization | Its documented input is Go benchmark output; it does not provide the required shared Go/Criterion report interface. |
-| Current repository scripts | Existing package tables, Criterion aggregation, comment updates | Repository-specific assumptions and separate implementations must be maintained twice. |
+## Recommended workflow
 
-These gaps justify a shared parser, comparison model, and renderer. Comment publication is delegated to [sticky-pull-request-comment](https://github.com/marocchino/sticky-pull-request-comment); historical storage and charts remain with github-action-benchmark. The language of an existing action is not a reason to replace it.
-
-The assessment of `github-action-benchmark` is based on its [action inputs](https://github.com/benchmark-action/github-action-benchmark/blob/master/action.yml), [Markdown renderer](https://github.com/benchmark-action/github-action-benchmark/blob/master/src/write.ts), and [package definition](https://github.com/benchmark-action/github-action-benchmark/blob/master/package.json). The tested history integration and dependency pin are recorded in [History](docs/history.md).
-
-## Recommended use
+Run base and head with the same toolchain on the same runner for each suite. Pass their completed logs and manifests to the generator, upload its full bundle, then publish from a separate job with PR write permission.
 
 ```mermaid
 flowchart LR
-    A[Go or Criterion output] --> B[Go normalization and comparison]
-    B --> C[Configured Markdown report]
-    B --> D[Absolute measurements as JSON]
-    C --> E[Job summary]
-    C --> H[sticky-pull-request-comment]
-    H --> I[PR comment]
-    D --> F[github-action-benchmark]
-    F --> G[History on GitHub Pages]
+    A[Base and head logs] --> B[benchmark-report/report]
+    B --> C[Report and replay artifact]
+    C --> D[benchmark-report]
+    D --> E[Job summary and sticky PR comment]
+    H[Primary-branch results] --> F[benchreport export]
+    F --> G[github-action-benchmark charts]
 ```
 
-On a pull request, the consumer workflow runs both revisions with one toolchain on the same runner for each suite. The Go generator creates the report; the existing composite action writes the summary and delegates comment updates. Fork PRs receive a job summary, with artifacts uploaded by the caller.
+Benchmark commands, caching, change detection, and suite selection belong to the caller. History uses primary-branch measurements and a [separate publishing workflow](docs/history.md).
 
-On a push to the primary branch, the workflow measures the accepted commit and exports absolute measurements to `github-action-benchmark`. That action owns historical storage and charts. Its comments, summaries, and failure alerts are disabled in this integration so that report policy has one owner. History publication is optional.
+## Used by
 
-Each repository retains its build commands, toolchain selection, change detection, suite matrix, and caching. The shared action consumes completed measurements. The Go-specific change detector in `go-socket.io` stays in that repository.
+These workflows run Benchmark Report v0.1.0, pinned to its release commit:
 
-## Publish an existing report
+| Repository | Workflow and configuration | Generated report |
+| --- | --- | --- |
+| go-socket.io | [Workflow](https://github.com/sshaplygin/go-socket.io/blob/master/.github/workflows/benchmarks.yml), [configuration](https://github.com/sshaplygin/go-socket.io/blob/master/.github/benchmarks/benchmark-report.json) | [Package tables and benchstat](https://github.com/sshaplygin/go-socket.io/pull/17#issuecomment-6026132160) |
+| ytsaurus-rs | [Workflow](https://github.com/sshaplygin/ytsaurus-rs/blob/main/.github/workflows/benchmarks.yml), [configuration](https://github.com/sshaplygin/ytsaurus-rs/blob/main/.github/benchmark-report.json) | [Four Criterion suites](https://github.com/sshaplygin/ytsaurus-rs/pull/93#issuecomment-6026770870) |
 
-After generating or downloading `benchmark-report.md`, call the root action in a publishing job with `pull-requests: write`. Replace the revision placeholder with a reviewed commit containing the action.
+The [generator action](docs/report-action.md) documents inputs, outputs, and installation. The root [publication action](docs/publication.md) also accepts reports generated by other tools:
 
 ```yaml
-- uses: sshaplygin/benchmark-report@<reviewed-commit-sha>
+- uses: sshaplygin/benchmark-report@f71129f2bebcf57f953b27607b7d8bb8c23afae9 # v0.1.0
   with:
     report-path: benchmark-report.md
     header: benchmark-report-go
 ```
 
-This entry point needs no Go or Python installation. It accepts existing reports from either repository. It supports Linux and macOS runners with Bash and the Node 24 action runtime required by the pinned dependency. See [publication configuration](docs/publication.md) for inputs, permissions, fork behavior, and migration of old comments.
+## Run locally
 
-## Local normalization
-
-Build from source with Go 1.25 or later. The captured manifests provide runnable examples with recorded revisions, toolchains, suite commands, and input paths:
+Download a binary from [Releases](https://github.com/sshaplygin/benchmark-report/releases), or build with Go 1.25 or later. This example uses the captured Go inputs included in the repository:
 
 ```sh
 go build -o bin/benchreport ./cmd/benchreport
-mkdir -p out
-./bin/benchreport normalize --parser go \
-  --manifest testdata/captured/go-pr15/base-manifest.json --out out/base.json
-./bin/benchreport normalize --parser criterion \
-  --manifest testdata/captured/criterion-four-suites/head-manifest.json --out out/criterion.json
-```
-
-Normalization preserves source checksums, Go samples, and Criterion estimate bounds. It reads recorded logs without running benchmarks or contacting GitHub. See [manifest contracts](docs/contracts.md#metadata-and-files) for preparing your own inputs and [fixture evidence](docs/fixtures.md) for the captured runs.
-
-## Local comparison
-
-After the normalization example, prepare the matching head and compare it with the saved base:
-
-```sh
-./bin/benchreport normalize --parser go \
-  --manifest testdata/captured/go-pr15/head-manifest.json --out out/head.json
-./bin/benchreport compare --base out/base.json --head out/head.json --out out/comparison.json
-./bin/benchreport config validate --config examples/benchmark-report.json
-```
-
-The default comparison needs no statistical tool or raw logs after normalization. To request benchstat, use the example configuration and install the [pinned tool](docs/contracts.md#tools-and-boundaries) beside the CLI, or select it with `--benchstat-path`. Statistical analysis verifies the saved raw input checksums before running.
-
-An enabled regression gate returns exit code 2 after writing the complete comparison. Report filters do not change that decision. Environment differences fail unless explicitly allowed with `--allow-environment-mismatch`; an allowed difference is recorded in the comparison.
-
-## Render and reproduce a report
-
-```sh
-./bin/benchreport render --input out/comparison.json --output-dir out/report
-./bin/benchreport render --input out/report/replay-inputs/comparison.json \
-  --config out/report/replay-inputs/configuration.json \
-  --reproduction out/report/reproduction.json --output-dir out/replayed
-```
-
-The first command writes the enabled reports, effective configuration, comparison snapshot, and `reproduction.json`. The second verifies the bundle and regenerates the same report bytes. Input paths and checksums are checked before replay; neither command needs GitHub credentials or a network connection.
-
-Use `--config FILE` to select metrics, columns, grouping, filters, sections, and output filenames. See [configuration](docs/configuration.md) for the complete contract. A standalone render bundle reproduces presentation from its saved comparison. Use `report` below to retain the inputs needed to verify normalization and calculation too.
-
-## Generate and verify a full bundle
-
-```sh
 ./bin/benchreport report --parser go \
   --base-manifest testdata/captured/go-pr15/base-manifest.json \
   --head-manifest testdata/captured/go-pr15/head-manifest.json --output-dir out/bundle
 ./bin/benchreport replay --reproduction out/bundle/reproduction.json --output-dir out/verified
 ```
 
-The full bundle includes raw logs, rebased manifests, normalized runs, configuration, calculations, and rendered reports. Replay verifies its inventory before repeating normalization and comparison offline. Both commands require a fresh output directory. For CI inputs, outputs, installation, and publication order, see the [generator action](docs/report-action.md) and [PR workflow example](examples/pull-request.yml).
+Both output directories must be absent or empty. Replay checks the archived inputs and regenerates the calculations and report without running benchmarks or contacting GitHub. Use the generator version recorded in the bundle.
 
-## Export benchmark history
+Add `--config FILE` to choose metrics, columns, grouping, filters, output formats, and regression policy. See [Configuration](docs/configuration.md) for defaults and [CLI contracts](docs/contracts.md#cli-contract) for individual normalize, compare, render, and export commands. Go statistical details require the pinned benchstat binary included in release archives.
 
-Export the normalized head run with history enabled in the configuration:
+## Development
 
-```sh
-./bin/benchreport export --input out/head.json \
-  --config examples/benchmark-report.json --output-dir out/history
-```
+Run `go test ./...` and `golangci-lint run ./...`. Use the lint version pinned in [CI](.github/workflows/ci.yml). The [history integration test](docs/history.md#local-verification) requires a checkout of its pinned upstream action. Release and consumer verification results are in the [acceptance record](https://github.com/sshaplygin/benchmark-report/pull/1).
 
-The command writes nonempty direction groups and prints their paths as JSON. History filters are independent of report filters. Export runs locally without credentials; the caller passes its files to the pinned external action on primary-branch pushes. See [History](docs/history.md) for the workflow, Pages prerequisites, and integration checks.
+## Reference
 
-Reproducing a saved report does not promise identical timings from a new benchmark run.
-
-## Development checks
-
-Run `go test ./...` and `golangci-lint run ./...` from the repository root. Use the golangci-lint version pinned in [CI](.github/workflows/ci.yml); [.golangci.yml](.golangci.yml) defines the shared local and CI checks.
-
-## Documentation
-
-| Document | Owns |
+| Document | Contents |
 | --- | --- |
-| [Architecture](docs/architecture.md) | Data contracts, CLI boundaries, comparison semantics, CI integration, and trust boundaries |
-| [Version 1 contracts](docs/contracts.md) | JSON schemas, exact value representation, identity encoding, and command specifications |
-| [Fixtures](docs/fixtures.md) | Captured log provenance and independently calculated acceptance cases |
-| [Configuration](docs/configuration.md) | User controls, defaults, validation, selection rules, and output behavior |
-| [Output examples](docs/output-examples.md) | Expected rendered results and the configuration choices that produce them |
-| [Generator action](docs/report-action.md) | Action inputs/outputs, binary installation, full artifact upload, and PR workflow |
-| [History](docs/history.md) | Tested external action pin, primary-branch workflow, Pages prerequisites, and integration checks |
-| [Publication](docs/publication.md) | Implemented action inputs, dependency pin, event handling, permissions, and comment migration |
-| [Consumer migrations](docs/migrations.md) | Proposed consumer patches, rollout prerequisites, and links to verification and rollback |
-| [Compatibility](docs/compatibility.md) | Tested input formats, artifact versions, native platforms, and replay coverage |
-| [Implementation plan](docs/implementation-plan.md) | Ordered delivery stages, definitions of done, reviewer acceptance criteria, and release evidence |
-| [Example configuration](examples/benchmark-report.json) | A complete consumer configuration using the version 1 interface |
-
-Requirements are defined in their owning document. The implementation plan links to those contracts instead of redefining them. Interface changes must update the owning document and its examples together.
+| [Architecture](docs/architecture.md) | Adapter boundaries, normalization, and comparison rules |
+| [Contracts](docs/contracts.md) | JSON schemas, exact values, CLI commands, and replay layout |
+| [Configuration](docs/configuration.md) | Options, defaults, and selection rules |
+| [Report action](docs/report-action.md) | Generation inputs/outputs and binary installation |
+| [Publication](docs/publication.md) | Permissions, comment identity, and size limits |
+| [History](docs/history.md) | Export integration and GitHub Pages setup |
+| [Compatibility](docs/compatibility.md) | Supported input formats and platforms |
+| [Fixtures](docs/fixtures.md) | Captured input provenance and expected results |
 
 ## License
 
-Benchmark Report is licensed under the [Mozilla Public License 2.0](LICENSE). Bundled dependencies retain their own licenses and notices, included in release archives.
+[Mozilla Public License 2.0](LICENSE). Release archives include dependency licenses and notices.
