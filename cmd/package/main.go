@@ -130,6 +130,7 @@ func run() error {
 	}
 	sort.Strings(moduleNames)
 	var notices strings.Builder
+	fmt.Fprintf(&notices, "Benchmark Report %s source code (MPL-2.0):\nhttps://github.com/sshaplygin/benchmark-report/tree/v%s\n\n", version, version)
 	notices.WriteString("Dependency notices for the bundled executables\n\n")
 	for _, name := range moduleNames {
 		data, e := command(root, nil, "go", "mod", "download", "-json", name+"@"+modules[name])

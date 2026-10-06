@@ -1,6 +1,6 @@
 # Benchmark Report
 
-Benchmark Report provides a composite GitHub Action that publishes a prepared Markdown report through `sticky-pull-request-comment`. The Go CLI normalizes and compares Go benchmark text and Rust Criterion logs, renders configurable Markdown/JSON, verifies offline replay bundles, and exports absolute measurements for benchmark history. The generator action is implemented; its first binary release is not available yet.
+Benchmark Report provides a composite GitHub Action that publishes a prepared Markdown report through `sticky-pull-request-comment`. The Go CLI normalizes and compares Go benchmark text and Rust Criterion logs, renders configurable Markdown/JSON, verifies offline replay bundles, and exports absolute measurements for benchmark history. See the [generator action](docs/report-action.md) for installation and workflow configuration.
 
 See [output examples](docs/output-examples.md) for Go and Criterion reports, a compact report, allocation and throughput tables, and history JSON.
 

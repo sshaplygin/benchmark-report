@@ -7,7 +7,7 @@ These patches replace repository-specific report generation and publication with
 | go-socket.io | [Patch, behavior changes, verification, rollback](../migrations/go-socket.io/README.md) | PR 15: 13 timing identities, 39 metric identities |
 | ytsaurus-rs | [Patch, behavior changes, verification, rollback](../migrations/ytsaurus-rs/README.md) | Four Criterion suites: 28 timing identities |
 
-Both proposals pin the generator and publisher to `d64cc0a04a3ceba58f2492a3cf87b99dce3b9d0c`. That generator maps to binary version `0.1.0`. Its release assets are not published, so the proposed workflows cannot yet install the generator. Local verification uses candidate binaries built from the reviewed source.
+Both archived proposals pin the generator and publisher to `d64cc0a04a3ceba58f2492a3cf87b99dce3b9d0c`, which maps to binary version `0.1.0`. Before opening a consumer PR, update both references to the reviewed release commit and verify that its mapped assets are available. Local proposal verification used candidate binaries built from the reviewed source.
 
 ## Rollout prerequisites
 
