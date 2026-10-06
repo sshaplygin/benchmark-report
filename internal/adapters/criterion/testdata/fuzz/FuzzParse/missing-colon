@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("valid time: [1 ns 2 ns 3 ns]\nbroken time [1 ns 2 ns 3 ns]\n")

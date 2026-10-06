@@ -87,3 +87,16 @@ func TestRejectNormalizedRelations(t *testing.T) {
 		}
 	}
 }
+
+func TestStrictUnicode(t *testing.T) {
+	for _, raw := range [][]byte{[]byte("{\"name\":\"bad\xff\"}"), []byte(`{"name":"bad\ud800"}`), []byte(`{"name":"bad\udc00"}`), []byte(`{"name":"bad\ud800\u0041"}`)} {
+		if _, err := Decode(raw); err == nil {
+			t.Fatalf("accepted invalid unicode %q", raw)
+		}
+	}
+	for _, raw := range []string{`{"name":"😀"}`, `{"name":"\ud83d\ude00"}`, `{"name":"literal \\ud800"}`, `{"name":"quote \" and slash \\"}`} {
+		if _, err := Decode([]byte(raw)); err != nil {
+			t.Fatalf("rejected valid unicode %s: %v", raw, err)
+		}
+	}
+}

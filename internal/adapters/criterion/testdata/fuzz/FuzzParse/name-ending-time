@@ -1,0 +1,2 @@
+go test fuzz v1
+[]byte("event time\n time: [1 ns 2 ns 3 ns]\ntime\n time: [1 ns 2 ns 3 ns]\n")
