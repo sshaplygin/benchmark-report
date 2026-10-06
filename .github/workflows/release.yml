@@ -20,9 +20,11 @@ jobs:
       - name: Build licensed native release archive
         run: go run ./cmd/package --release --output-dir "$RUNNER_TEMP/release-assets"
       - name: Verify release license, version, inventory, and checksums
-        run: python3 tests/release.py --assets "$RUNNER_TEMP/release-assets"
+        run: go run ./cmd/releasecheck --assets "$RUNNER_TEMP/release-assets"
       - name: Verify installation and reject damaged assets
-        run: python3 tests/install.py --assets "$RUNNER_TEMP/release-assets"
+        env:
+          BENCHREPORT_TEST_ASSETS: ${{ runner.temp }}/release-assets
+        run: go test -count=1 -v ./tests/installer
       - name: Verify packaged Go and Criterion reports and full replay
         shell: bash
         run: |
