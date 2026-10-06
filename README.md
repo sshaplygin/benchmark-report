@@ -133,7 +133,8 @@ Reproducing a saved report does not promise identical timings from a new benchma
 | [History](docs/history.md) | Tested external action pin, primary-branch workflow, Pages prerequisites, and integration checks |
 | [Publication](docs/publication.md) | Implemented action inputs, dependency pin, event handling, permissions, and comment migration |
 | [Consumer migrations](docs/migrations.md) | Proposed consumer patches, rollout prerequisites, and links to verification and rollback |
+| [Compatibility](docs/compatibility.md) | Tested input formats, artifact versions, native platforms, and replay coverage |
 | [Implementation plan](docs/implementation-plan.md) | Ordered delivery stages, definitions of done, reviewer acceptance criteria, and release evidence |
-| [Example configuration](examples/benchmark-report.json) | A complete consumer configuration using the proposed interface |
+| [Example configuration](examples/benchmark-report.json) | A complete consumer configuration using the version 1 interface |
 
-Requirements are defined in their owning document. The implementation plan links to those contracts instead of redefining them. Changes to the proposed interface must update the owning document and its examples together.
+Requirements are defined in their owning document. The implementation plan links to those contracts instead of redefining them. Interface changes must update the owning document and its examples together.

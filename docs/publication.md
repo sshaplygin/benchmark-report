@@ -1,6 +1,6 @@
 # Report publication
 
-The root [composite action](../action.yml) accepts an existing UTF-8 Markdown file. It appends that file to the job summary and uses `marocchino/sticky-pull-request-comment` to create or update a PR comment. It does not run benchmarks or require the planned Go CLI.
+The root [composite action](../action.yml) accepts an existing UTF-8 Markdown file. It appends that file to the job summary and uses `marocchino/sticky-pull-request-comment` to create or update a PR comment. It does not run benchmarks or require the Go CLI.
 
 ## Inputs and outputs
 
