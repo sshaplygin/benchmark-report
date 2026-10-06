@@ -17,12 +17,22 @@ jobs:
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version: '1.25.0'
+      - name: Build pinned benchstat for integration tests
+        env:
+          GOBIN: ${{ runner.temp }}/benchstat-bin
+        run: go install golang.org/x/perf/cmd/benchstat@v0.0.0-20251023143056-3684bd442cc8
       - name: Validate contracts and examples
+        env:
+          BENCHREPORT_TEST_BENCHSTAT: ${{ runner.temp }}/benchstat-bin/benchstat
         run: go test ./...
       - name: Check Go packages
         run: go vet ./...
       - name: Check normalization CLI against captured inputs
         run: bash tests/normalize-cli.sh
+      - name: Check comparison gate and configuration CLI
+        env:
+          BENCHREPORT_TEST_BENCHSTAT: ${{ runner.temp }}/benchstat-bin/benchstat
+        run: bash tests/compare-cli.sh
   publication:
     strategy:
       matrix:

@@ -1,6 +1,6 @@
 # Benchmark Report
 
-Benchmark Report provides a composite GitHub Action that publishes a prepared Markdown report through `sticky-pull-request-comment`. The Go CLI normalizes Go benchmark text and Rust Criterion logs into a shared format. Comparison, configurable rendering, and local report reproduction remain planned; no CLI release is available yet.
+Benchmark Report provides a composite GitHub Action that publishes a prepared Markdown report through `sticky-pull-request-comment`. The Go CLI normalizes and compares Go benchmark text and Rust Criterion logs. Configurable rendering and local report reproduction remain planned; no CLI release is available yet.
 
 See [output examples](docs/output-examples.md) for Go and Criterion reports, a compact report, allocation and throughput tables, and history JSON.
 
@@ -68,13 +68,26 @@ mkdir -p out
 
 Normalization preserves source checksums, Go samples, and Criterion estimate bounds. It reads recorded logs without running benchmarks or contacting GitHub. See [manifest contracts](docs/contracts.md#metadata-and-files) for preparing your own inputs and [fixture evidence](docs/fixtures.md) for the captured runs.
 
-## Planned comparison and reporting
+## Local comparison
 
-The remaining commands will consume normalized base/head files:
+After the normalization example, prepare the matching head and compare it with the saved base:
 
 ```sh
-benchreport compare --base base.json --head head.json \
-  --config benchmark-report.json --out comparison.json
+./bin/benchreport normalize --parser go \
+  --manifest testdata/captured/go-pr15/head-manifest.json --out out/head.json
+./bin/benchreport compare --base out/base.json --head out/head.json --out out/comparison.json
+./bin/benchreport config validate --config examples/benchmark-report.json
+```
+
+The default comparison needs no statistical tool or raw logs after normalization. To request benchstat, use the example configuration and install the [pinned tool](docs/contracts.md#tools-and-boundaries) beside the CLI, or select it with `--benchstat-path`. Statistical analysis verifies the saved raw input checksums before running.
+
+An enabled regression gate returns exit code 2 after writing the complete comparison. Report filters do not change that decision. Environment differences fail unless explicitly allowed with `--allow-environment-mismatch`; an allowed difference is recorded in the comparison.
+
+## Planned rendering and history export
+
+These remaining commands will consume the saved comparison and normalized run:
+
+```sh
 benchreport render --input comparison.json \
   --config benchmark-report.json --output-dir out
 benchreport export --input head.json \

@@ -1,6 +1,6 @@
 # Version 1 contracts
 
-This document freezes serialization and implementation choices left open by [Architecture](architecture.md) and [Configuration](configuration.md). The development validator and `benchreport normalize` are implemented; the remaining CLI commands are planned.
+This document freezes serialization and implementation choices left open by [Architecture](architecture.md) and [Configuration](configuration.md). The development validator, `benchreport normalize`, `benchreport compare`, and `benchreport config validate` are implemented; rendering and export remain planned.
 
 ## Schemas and validation
 
@@ -33,13 +33,13 @@ Each suite records parser name (`go` or `criterion`), parser contract version (`
 
 ## Tools and boundaries
 
-The module is `github.com/sshaplygin/benchmark-report`, minimum Go 1.25.0. `internal/contracts` owns version definitions, JSON validation and canonical identity. `internal/model` owns shared typed documents, `internal/decimal` exact normalization and medians, `internal/input` manifest loading and file orchestration, and `internal/adapters/gobench` and `internal/adapters/criterion` source parsing. `cmd/benchreport` wires normalization. Future stages add comparison (`internal/compare`), rendering (`internal/render`), history (`internal/history`), configuration (`internal/config`), and reproduction (`internal/reproduction`) when implemented. No parser imports renderer or publisher code.
+The module is `github.com/sshaplygin/benchmark-report`, minimum Go 1.25.0. `internal/contracts` owns version definitions, JSON validation and canonical identity. `internal/model` owns shared typed documents, `internal/decimal` exact normalization and medians, `internal/input` manifest loading and file orchestration, and `internal/adapters/gobench` and `internal/adapters/criterion` source parsing. `internal/config` expands and validates effective configuration; `internal/compare` computes every measurement comparison; `internal/statistics` runs pinned benchstat. `cmd/benchreport` wires normalization, comparison, and configuration validation. Future stages add rendering (`internal/render`), history (`internal/history`), and reproduction (`internal/reproduction`) when implemented. No parser imports renderer or publisher code.
 
 Benchstat is pinned to `golang.org/x/perf/cmd/benchstat@v0.0.0-20251023143056-3684bd442cc8` (commit `3684bd442cc85a615905c090d30b3a23d16e35d9`, module requires Go 1.24). This matches the recorded Go consumer workflow. Offline discovery uses explicit `compare --benchstat-path FILE` when supplied, otherwise the `benchstat` binary beside `benchreport`. Verify Go build metadata module version before execution; absent/unreadable/wrong metadata or a different pin is an error when requested. Never install or download it implicitly. Default `statistics: none` needs no executable. Record executable SHA-256, version, ordered arguments, stdout and stderr in reproduction evidence.
 
-Run benchstat separately for each suite, in canonical suite order, with base inputs before head inputs and each side's manifest file order preserved. Store each invocation separately; equal benchmark/package names across suites must never be pooled. Recorded file checksums must match before invocation. Advisory policy remains independent of statistics.
+Run benchstat separately for each suite, in canonical suite order, with base inputs before head inputs and each side's manifest file order preserved. Store each invocation separately; equal benchmark/package names across suites must never be pooled. Recorded file checksums must match before invocation. Advisory policy remains independent of statistics. Pass each raw file as one argument, `base=ABSOLUTE_PATH` or `head=ABSOLUTE_PATH`; repeat the same side label for every file on that side. The pinned [benchstat CLI](https://github.com/golang/perf/blob/3684bd442cc85a615905c090d30b3a23d16e35d9/cmd/benchstat/main.go#L318) accepts explicit file labels, and its [file reader](https://github.com/golang/perf/blob/3684bd442cc85a615905c090d30b3a23d16e35d9/benchfmt/files.go#L11) preserves repeated explicit labels. This pools repeated samples into exactly one base and one head column while keeping manifest file order. Arguments record the actual invocation; input provenance keeps each original file and checksum separately. Paths are process arguments, never shell text.
 
-## Planned CLI help
+## CLI contract
 
 | Command | Inputs | Successful outputs |
 | --- | --- | --- |
@@ -49,7 +49,7 @@ Run benchstat separately for each suite, in canonical suite order, with base inp
 | `export --input FILE [--config FILE] --output-dir DIR` | One normalized run and enabled history configuration | Nonempty direction files with explicit paths |
 | `config validate --config FILE` | Configuration only | No generated files |
 
-All commands have `--help` and `--version`; help/version return 0 without inputs. Missing/unknown flags and unsupported parsers return 1. Regular diagnostics go to stderr; generated outputs go to requested files. None executes benchmarks or uses GitHub credentials. None requires network access. Exit codes are 0 success, 1 invalid input/execution failure, and 2 enabled regression gate failure from `compare` after its complete artifact is written. Failed commands leave no complete-looking output. The planned release targets Linux/macOS amd64/arm64.
+All commands have `--help` and `--version`; help/version return 0 without inputs. Missing/unknown flags and unsupported parsers return 1. Regular diagnostics go to stderr; generated outputs go to requested files. None executes benchmarks or uses GitHub credentials. None requires network access. Exit codes are 0 success, 1 invalid input/execution failure, and 2 enabled regression gate failure from `compare` after its complete artifact is written. Failed commands leave no complete-looking output. Output paths cannot replace input documents, raw inputs, the running generator, or the selected benchstat executable. The planned release targets Linux/macOS amd64/arm64.
 
 Default comparison fields are expanded before rendering checks equality against stored policy. Report/history display changes do not alter policy. Render uses the display precision from policy for change; measurement display rounds to at most three fractional decimal places, ties away from zero, trimming trailing zeros. Auto time selects the largest of s/ms/µs/ns for which the larger nonzero side is at least one unit; auto bytes and throughput use decimal GB/MB/kB/B with the same rule. Both sides use one unit. Values under one canonical unit retain three decimals; zero is `0`. Canonical mode uses the canonical unit with the same rounding. These are display strings only.
 

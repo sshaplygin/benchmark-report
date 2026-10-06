@@ -171,3 +171,17 @@ func TestRebaseThroughDirectorySymlink(t *testing.T) {
 		t.Fatal("unresolvable symlink-relative reference", resolved, err)
 	}
 }
+
+func TestManifestMathematicalVersion(t *testing.T) {
+	dir, manifest := fixture(t, []string{"a.txt"})
+	data, err := os.ReadFile(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data = []byte(strings.Replace(string(data), `"schema_version":1`, `"schema_version":1e0`, 1))
+	write(t, manifest, data)
+	write(t, filepath.Join(dir, "a.txt"), []byte("pkg: p\nBenchmarkX-4 1 1 ns/op\n"))
+	if err := Normalize("go", manifest, filepath.Join(dir, "out.json"), gobench.Parse); err != nil {
+		t.Fatal(err)
+	}
+}
