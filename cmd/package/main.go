@@ -77,7 +77,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(work)
+	defer func() { _ = os.RemoveAll(work) }() // Temporary build files are best-effort cleanup.
 	stage := filepath.Join(work, "stage")
 	if err = os.Mkdir(stage, 0755); err != nil {
 		return err
@@ -216,8 +216,8 @@ func run() error {
 		return e
 	}
 	temporaryName := temporary.Name()
-	defer temporary.Close()
-	defer os.Remove(temporaryName)
+	defer func() { _ = temporary.Close() }() // The successful write path checks Close below.
+	defer func() { _ = os.Remove(temporaryName) }()
 	gz := gzip.NewWriter(temporary)
 	tw := tar.NewWriter(gz)
 	for _, name := range names {
@@ -251,7 +251,7 @@ func run() error {
 	}
 	hash := sha256.New()
 	_, e = io.Copy(hash, handle)
-	handle.Close()
+	_ = handle.Close() // Read-only handle; preserve any copy error.
 	if e != nil {
 		return e
 	}

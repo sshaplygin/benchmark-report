@@ -213,13 +213,13 @@ func atomicWrite(path string, data []byte) error {
 		return fmt.Errorf("output %s: %w", path, err)
 	}
 	temporary := f.Name()
-	defer os.Remove(temporary)
+	defer func() { _ = os.Remove(temporary) }() // Cleanup must not replace the write error.
 	if _, err = f.Write(data); err != nil {
-		f.Close()
+		_ = f.Close()
 		return err
 	}
 	if err = f.Sync(); err != nil {
-		f.Close()
+		_ = f.Close()
 		return err
 	}
 	if err = f.Close(); err != nil {

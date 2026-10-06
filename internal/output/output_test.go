@@ -122,7 +122,7 @@ func TestRootPreventsChangedSymlinkEscape(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer cap.Close()
+	defer func() { _ = cap.Close() }()
 	calls := 0
 	rename := func(a, b string) error {
 		calls++

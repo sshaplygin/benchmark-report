@@ -67,7 +67,7 @@ func Build(opts Options) (Bundle, error) {
 	if err != nil {
 		return bundle, err
 	}
-	defer os.RemoveAll(workspace)
+	defer func(path string) { _ = os.RemoveAll(path) }(workspace) // Capture the path before resolving symlinks.
 	workspace, err = filepath.EvalSymlinks(workspace)
 	if err != nil {
 		return bundle, err

@@ -27,7 +27,7 @@ func Replay(manifest, directory, tool, version string) (Result, error) {
 	if err != nil {
 		return Result{}, err
 	}
-	defer os.RemoveAll(workspace)
+	defer func(path string) { _ = os.RemoveAll(path) }(workspace) // Temporary workspace cleanup is best effort.
 	for _, file := range m.Files {
 		target := filepath.Join(workspace, filepath.FromSlash(file.Path))
 		if err = os.MkdirAll(filepath.Dir(target), 0755); err != nil {
