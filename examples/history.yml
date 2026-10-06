@@ -1,7 +1,7 @@
 # Copy into the consumer's .github/workflows/. Set BENCHREPORT_SOURCE_SHA to
-# an accepted Stage 5 commit and add .github/benchmark-history.json with
+# a reviewed full commit SHA and add .github/benchmark-history.json with
 # schema_version: 1, history.enabled: true and the desired history.metrics.
-# The source build is temporary until released binary/action packaging exists.
+# This optional template builds the selected source; it is not a deployed example.
 name: Primary-branch benchmark history
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
           SOURCE_SHA: ${{ vars.BENCHREPORT_SOURCE_SHA }}
         run: |
           if [[ ! "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
-            echo 'Set BENCHREPORT_SOURCE_SHA to a full accepted Stage 5 commit SHA.' >&2
+            echo 'Set BENCHREPORT_SOURCE_SHA to a full reviewed commit SHA.' >&2
             exit 1
           fi
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4

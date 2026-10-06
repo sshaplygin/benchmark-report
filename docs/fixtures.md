@@ -1,6 +1,6 @@
 # Fixture evidence
 
-These archived inputs and independently calculated expectations exercise the parsing, comparison, and rendering contracts. The owning contracts remain [Architecture](architecture.md) and [Configuration](configuration.md).
+These archived inputs and independent expectations cover [normalization and comparison](architecture.md) and [report selection](configuration.md).
 
 ## Captured inputs
 
@@ -10,7 +10,7 @@ All captures were downloaded through authenticated `gh api` on 2026-10-03. No be
 
 [Run 37104301673](https://github.com/sshaplygin/go-socket.io/actions/runs/37104301673), artifact `11267366782`, contains the exact report associated with [comment 5966539113](https://github.com/sshaplygin/go-socket.io/pull/15#issuecomment-5966539113). Base is `79a393cf6e5e299fd4faa8e02225f2632e0ea6e8`; head is `89368c38fa1643cbac4478d34aa8d7c3ef38aff1`. The workflow at that head records `go test -mod=readonly -run '^$' -bench . -benchmem -count=10 ./...`, followed by `benchstat base.txt pr.txt`. Benchstat is pinned to `v0.0.0-20251023143056-3684bd442cc8`. The checked-in `toolchain-evidence.txt` excerpts resolve `stable` to Go 1.27.1, Linux amd64; the workflow uses `GOTOOLCHAIN=local` and `ubuntu-24.04`. Both revisions run sequentially in the same compare job. CPU metadata in the raw inputs is `INTEL(R) XEON(R) PLATINUM 8573C`.
 
-Each side has 130 benchmark result lines: ten repetitions of 13 identities. Package counts are packet 2, payload 10, transport 1. Every result supplies time, bytes, and allocations, so normalization should yield 39 measurements per side, each with ten samples; no throughput measurement occurs. `comparison.txt` and `benchmark-report.md` are unmodified archived consumer output. They are evidence of the legacy report, not golden outputs for the new renderer.
+Each side has 130 benchmark result lines: ten repetitions of 13 identities. Package counts are packet 2, payload 10, transport 1. Every result supplies time, bytes, and allocations, so the expected normalized inventory is 39 measurements per side, each with ten samples; no throughput measurement occurs. `comparison.txt` and `benchmark-report.md` are unmodified archived consumer output. They are evidence of the legacy report, not golden outputs for the new renderer.
 
 Decoder-4's base middle timing pair is 60.90 and 61.39 ns, giving exact median 61.145 ns; head median is 61.73 ns. This checks retention of precision beyond the legacy displayed values.
 
@@ -25,9 +25,9 @@ Decoder-4's base middle timing pair is 60.90 and 61.39 ns, giving exact median 6
 | skiff | 11266302700 | ytsaurus-skiff / codec_throughput | 3 | 0 |
 | yson | 11266261855 | ytsaurus-yson / yson_benchmark | 4 | 0 |
 
-Invocation for each row is `cargo bench --locked -p PACKAGE --bench TARGET -- --noplot`, with combined stdout/stderr captured. Normalize 28 timing measurements per side. Retain bounds and the middle estimate; do not infer raw samples or counts from progress text. Throughput and baseline-change lines do not create timing measurements. For example, base `Skiff codec throughput/encode_dynamic` has bounds 2.8763–3.0792 ms and estimate 2.9655 ms, hence 2,876,300 / 2,965,500 / 3,079,200 ns.
+Invocation for each row is `cargo bench --locked -p PACKAGE --bench TARGET -- --noplot`, with combined stdout/stderr captured. Expected normalization is 28 timing estimates and bounds per side; throughput and baseline-change lines are ancillary. Raw samples are not present in these logs. For example, base `Skiff codec throughput/encode_dynamic` has bounds 2.8763–3.0792 ms and estimate 2.9655 ms, hence 2,876,300 / 2,965,500 / 3,079,200 ns.
 
-## Requirement-to-fixture index
+## Coverage and expected results
 
 Expected outcomes below were calculated from the stated numbers and contracts, independently of implementation output. Numerical cases are machine-readable in `testdata/handwritten/numerical.json`; they are test specifications, not versioned product documents.
 
@@ -45,4 +45,4 @@ Expected outcomes below were calculated from the stated numbers and contracts, i
 | [Selection](configuration.md#report-selection): filter precedence, stable calculation, row limits | `handwritten/selection.json` | Literal expected selected/order/omitted values; full classifications and gate unchanged. |
 | [Reproduction](architecture.md#reproduction-artifacts): exact stored inputs | Captured manifests and artifact metadata | All referenced files exist; original and trimmed checksum roles distinct; no network needed to read captured files. |
 
-The adapter and comparison tests use these expectations; [rendering goldens](../internal/render/testdata/golden/) and [CLI integration tests](../tests/) cover generated reports and replay. Stage acceptance is recorded in the implementation PR's completion record.
+The adapter and comparison tests use these expectations; [rendering goldens](../internal/render/testdata/golden/) and [CLI integration tests](../tests/) cover generated reports and replay.

@@ -1,6 +1,6 @@
 # Report generation action
 
-The [report action](../report/action.yml) consumes completed manifests and logs. It installs the binary version mapped by its commit, generates reports and a full reproduction bundle, and returns paths. It does not execute benchmark commands or publish comments. The root [publication action](publication.md) remains independently usable with an existing Markdown file.
+The [report action](../report/action.yml) consumes completed manifests and logs. It installs the binary version mapped by its commit, generates reports and a full reproduction bundle, and returns paths. It does not execute benchmark commands or publish comments. Use the [publication action](publication.md) to publish an existing Markdown file.
 
 Binary archives and SHA-256 checksums are distributed through [GitHub Releases](https://github.com/sshaplygin/benchmark-report/releases). The action requires the release matching its version mapping. CI tests substitute locally built candidate archives for the download transport and run the complete composite action.
 
@@ -26,9 +26,7 @@ The complete Markdown and presentation JSON remain in the bundle. `comment-path`
 
 ## Workflow
 
-[examples/pull-request.yml](../examples/pull-request.yml) runs both revisions on one runner with one fixed toolchain, generates the report, uploads the full bundle, and publishes from a separate job. Replace its action revision placeholders and consumer-specific commands before use. The example expects `outputs.markdown: "report.md"`; update its summary path when choosing a different filename. Go is installed there to run Go benchmarks, not to execute the reporting action. A Criterion consumer retains its Rust setup and suite selection instead.
-
-The publishing job runs no PR checkout, benchmark command, or downloaded executable. It adds the full summary once, then delegates the bounded comment to the root action with summary disabled. Fork and Dependabot events retain the summary and artifacts and skip comments. The final gate runs after publication. History publication uses the separate [primary-branch workflow](history.md).
+The [consumer workflows](../README.md#used-by) show Go and Criterion usage. Follow the [publication permissions and event rules](publication.md#events-and-permissions) when separating report generation from publication. Optional primary-branch history is documented in [History integration](history.md).
 
 ## Binary mapping and installation
 
@@ -36,14 +34,8 @@ The publishing job runs no PR checkout, benchmark command, or downloaded executa
 
 Runtime prerequisites are Bash, curl, tar, jq, and either sha256sum or shasum, available on the supported GitHub-hosted runners. No Go or Python installation is needed for generation or publication. The root publisher additionally uses the upstream action's runtime described in [Publication](publication.md#dependency-contract).
 
-The development packager builds one native platform archive:
+Archives include `benchreport`, pinned benchstat, version/platform metadata, member checksums, the project [license](../LICENSE), and dependency notices. Installation and cross-platform replay coverage are listed in [Compatibility](compatibility.md#native-candidates-and-replay).
 
-```sh
-go run ./cmd/package --output-dir dist
-```
+## Release verification
 
-Archives contain both executables, version/platform metadata, checksums for members, the project's [MPL-2.0 license](../LICENSE), and the license texts and notices of their dependencies. `go run ./cmd/package --release --output-dir dist` requires a nonempty project `LICENSE` and marks the archive as a release artifact. Publication requires separate authorization; no packaging command publishes a release.
-
-The manual [release workflow](../.github/workflows/release.yml) builds all four native archives, verifies their contents and checksums, and tests installation and captured report replay before uploading artifacts. It has read permissions and does not publish a release. Publish those verified artifacts under `vVERSION`, with that tag pointing to the workflow's exact source commit. `LICENSES/NOTICE.txt` in each archive links to the matching project source.
-
-CI runs native archive installation and captured-consumer replay on `ubuntu-24.04`, `ubuntu-24.04-arm`, `macos-14`, and `macos-15-intel`. These labels cover both architectures according to the [GitHub runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners). Test harnesses use Go on the build side; runtime checks reject attempts by the installer or generator wrapper to invoke Go or Python.
+The manual [release workflow](../.github/workflows/release.yml) builds all four native archives and verifies installation, checksums, and captured report replay. It has read permissions and uploads artifacts without publishing a release. Publish the verified archives under `vVERSION`, with the tag pointing to the workflow's exact source commit.

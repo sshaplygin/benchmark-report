@@ -46,24 +46,18 @@ The action pins [sticky-pull-request-comment v3.0.5](https://github.com/marocchi
 
 It passes `header`, the prepared file path, the token, `skip_unchanged: true`, and `ignore_empty: false`. Append, recreate, hide, and delete modes remain disabled. Lookup, pagination, author matching, and API error handling belong to the dependency. The first matching non-minimized comment by the authenticated author is selected; duplicate matches are not diagnosed by this wrapper. See the pinned [lookup implementation](https://github.com/marocchino/sticky-pull-request-comment/blob/5770ad5eb8f42dd2c4f34da00c94c5381e49af88/src/comment.ts).
 
-Updating the pin requires review of marker format, author matching, input/output names, runtime requirements, and error behavior. Do not copy the upstream implementation into this repository.
+## Comment identity
 
-## Migrating existing comments
-
-For the default header, the dependency appends this exact marker:
+The header is part of the dependency's marker. For the default header:
 
 ```html
 <!-- Sticky Pull Request Commentbenchmark-report -->
 ```
 
-The existing consumer markers, `<!-- go-socket.io:benchmark-comparison -->` and `<!-- ytsaurus-rs:criterion-benchmark-comparison -->`, do not match this format. Passing their text as `header` does not adopt an old comment.
-
-The default migration stops the previous publisher and creates one new managed comment on each already-open PR. Subsequent runs update that new comment. Historical comments remain untouched. New PRs receive only the managed comment.
-
-If retaining an existing comment ID is required, make a one-time authorized edit through the original bot identity to append the exact sticky marker for the chosen header before switching publishers. Keep the token identity and header stable afterward. This migration is not an ongoing feature of the Go generator or wrapper.
+Use a distinct header for each report within a PR. Keep the header and publishing token identity stable so subsequent runs update the same managed comment.
 
 ## Verification
 
 Run `bash tests/prepare-comment.sh` to check file validation, literal filenames, event eligibility, summary behavior, UTF-8, and comment size handling without GitHub requests. CI also exercises the composite action in summary-only mode on Linux and macOS.
 
-Live create/update behavior must be checked in an explicitly authorized trial PR before release. No live comment trial is implied by the local checks. The inactive [trial workflow](../examples/comment-trial.yml) prepares create, update, unchanged-content, distinct-header, and insufficient-permission checks against the committed publication wrapper. Installing it and applying its opt-in label requires authorization: a successful trial creates or updates two synthetic comments on the selected PR. It performs no release or consumer rollout.
+See [Used by](../README.md#used-by) for consumer workflows and live reports.

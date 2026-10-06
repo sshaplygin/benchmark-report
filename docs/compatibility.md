@@ -11,7 +11,7 @@ This matrix covers version `0.1.0`. The [report action](report-action.md#binary-
 | Internal JSON documents | Schema version `1` | [Contracts](contracts.md#schemas-and-validation) owns document validation and unsupported-version behavior. Native action string maps and external history arrays use their separately defined formats. |
 | Go statistics | Bundled, pinned upstream benchstat | [Statistical evidence](contracts.md#tools-and-boundaries) defines identity verification and suite isolation. Criterion reports use point estimates and do not claim cross-run statistical significance. |
 
-Go uses a median estimator; Criterion uses its reported point estimate and bounds. They retain distinct estimator identities. Adapter scope and additional-format work, including C++, C#, and JavaScript candidates, are described in [Architecture](architecture.md#normalization) and the [post-PoC TODO list](implementation-plan.md#todo-after-the-poc); those adapters are not implemented.
+The [adapter boundary](architecture.md#adapter-boundary) describes format scope and future C++, C#, and JavaScript adapters; those adapters are not implemented.
 
 ## Native candidates and replay
 
@@ -24,8 +24,8 @@ Go uses a median estimator; Criterion uses its reported point estimate and bound
 
 The [CI package and replay jobs](../.github/workflows/ci.yml) build and test a native candidate on each platform, including installation checks and captured Go/Criterion report generation. A single pair of Linux-generated Go/Criterion bundles is replayed on all four platforms; complete Markdown, presentation JSON, and bounded comments must match byte for byte. This verifies those archived bundles across the matrix, not arbitrary operating systems or environments.
 
-Replay uses the recorded generator version and archived inputs, without rerunning benchmark commands. Statistical replay requires the recorded benchstat identity; platform-specific binary checks follow the [replay contract](contracts.md#full-report-and-calculation-replay). Unsupported platforms are rejected by the installer.
+Version and statistical-tool requirements are defined by the [replay contract](contracts.md#full-report-and-calculation-replay).
 
 ## History profiles
 
-History compares successive runs within a stable suite, environment, toolchain, and estimator profile. Changing the profile requires a separate series; presentation changes do not redefine it. The [history integration](history.md) documents the pinned external action, tested appends and profile isolation, and its numeric compatibility boundary. Exact normalized decimals remain available independently of the external JSON-number format.
+[History integration](history.md) documents tested appends, environment/estimator profile isolation, and the external JSON-number compatibility boundary.

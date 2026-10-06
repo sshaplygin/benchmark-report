@@ -1,4 +1,4 @@
-// contractcheck is a development validator; it is not the planned benchreport CLI.
+// contractcheck validates JSON documents against the repository's schemas.
 package main
 
 import (
