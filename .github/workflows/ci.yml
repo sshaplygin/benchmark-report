@@ -1,7 +1,17 @@
 name: Checks
 on:
   push:
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - '**/README.md'
+      - 'LICENSE'
   pull_request:
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+      - '**/README.md'
+      - 'LICENSE'
 permissions:
   contents: read
 jobs:
