@@ -1,6 +1,6 @@
 # Fixture evidence
 
-These inputs support [stage 1](implementation-plan.md#stage-1-contracts-and-fixtures). They are archived observations and handwritten expectations, not output from an implemented parser. The owning contracts remain [Architecture](architecture.md) and [Configuration](configuration.md).
+These archived inputs and independently calculated expectations exercise the parsing, comparison, and rendering contracts. The owning contracts remain [Architecture](architecture.md) and [Configuration](configuration.md).
 
 ## Captured inputs
 
@@ -45,4 +45,4 @@ Expected outcomes below were calculated from the stated numbers and contracts, i
 | [Selection](configuration.md#report-selection): filter precedence, stable calculation, row limits | `handwritten/selection.json` | Literal expected selected/order/omitted values; full classifications and gate unchanged. |
 | [Reproduction](architecture.md#reproduction-artifacts): exact stored inputs | Captured manifests and artifact metadata | All referenced files exist; original and trimmed checksum roles distinct; no network needed to read captured files. |
 
-Later stages add executable tests and golden renderings against these expectations. This index does not claim completed parser, comparison, renderer, history integration, or replay acceptance.
+The adapter and comparison tests use these expectations; [rendering goldens](../internal/render/testdata/golden/) and [CLI integration tests](../tests/) cover generated reports and replay. Stage acceptance is recorded in the implementation PR's completion record.

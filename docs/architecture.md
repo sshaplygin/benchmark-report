@@ -4,7 +4,7 @@ This document specifies the first release. Version 1 schemas and serialization r
 
 ## Boundaries
 
-The executable is `benchreport`. Its parsing, comparison, rendering, and export code is written in Go. A future report action installs the released binary and invokes it. The root publication action already accepts a completed Markdown file and delegates GitHub comment operations to sticky-pull-request-comment. Go consumers and Rust consumers use the same reporting interface.
+The executable is `benchreport`. Its parsing, comparison, rendering, and export code is written in Go. The [report action](report-action.md) installs its mapped binary and invokes it; the first binary release is not published yet. The root publication action accepts a completed Markdown file and delegates GitHub comment operations to sticky-pull-request-comment. Go consumers and Rust consumers use the same reporting interface.
 
 The first release supports Linux and macOS on amd64 and arm64. Installation uses release assets and published SHA-256 checksums. It does not install Go in consumer workflows. The action version selects a matching binary version; consumers pin the action to a commit. The release process must verify that mapping.
 
