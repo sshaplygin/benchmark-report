@@ -15,7 +15,7 @@ The existing `pull_request` trigger, path exclusions, four parallel suites, `ubu
 
 The checked-in toolchain is Rust `1.94.0`. The workflow retains its policy of using the PR's pinned compiler for both revisions. It now enforces that policy with `RUSTUP_TOOLCHAIN`: previously the base command could resolve the base checkout's own `rust-toolchain.toml`. This changes compiler selection only when the revisions request different toolchains.
 
-`scripts/benchmark_report_inputs.py` is an input producer, not a formatter. Its record mode saves the actual compiler identity; assembly requires all four nonempty logs and matching recorded environments. It emits one explicit suite inventory per revision with exact commands and physical log paths. Python remains a consumer producer dependency, run through pinned setup-uv and `uv run --no-project --no-python-downloads` using the runner's preinstalled interpreter. The shared report and publisher actions require no Python or Go runtime. Existing Python CI applies ruff and ty to this helper.
+`scripts/benchmark_report_inputs.go` is an input producer, not a formatter. Its record mode saves the actual compiler identity; assembly requires all four nonempty logs and matching recorded environments. It emits one explicit suite inventory per revision with exact commands and physical log paths. The producer is standalone Go, run with pinned setup-go and `go run`. The shared report and publisher actions require no Go runtime.
 
 The read-only aggregate job uses the PR checkout's producer and `.github/benchmark-report.json`, generates a full report and bounded comment, and uploads the complete replay inventory. A migration PR can therefore provide these new files without a separate base bootstrap. This job has only read permissions, like the measurement jobs that already execute PR Cargo code; publication remains isolated. Failed or missing suites prevent aggregation. The old `compare_criterion.py` and `post_benchmark_comment.py` files remain unchanged but have no workflow invocations.
 
@@ -27,7 +27,7 @@ Configuration, artifact replay, fork handling, and comment sizing are defined by
 
 Verification used the archived [four-suite fixture](../../testdata/captured/criterion-four-suites) and its [provenance](../../docs/fixtures.md).
 
-The legacy parser finds 25 point estimates per revision: client 9, job 9, skiff 3, yson 4. All 25 estimates exactly match the new normalized nanosecond values when the legacy source decimal and unit are converted using decimal arithmetic. Floating-point intermediate rounding in the old Python implementation is not used as the equality oracle. The new parser finds 28 estimates per revision because it also accepts the client's three inline name-and-time lines:
+The independent Go oracle reproduces the legacy separate-line matching rule, which finds 25 point estimates per revision: client 9, job 9, skiff 3, yson 4. All 25 estimates exactly match the new normalized nanosecond values when the legacy source decimal and unit are converted using decimal arithmetic. Floating-point intermediate rounding in the old Python implementation is not used as the equality oracle. The new parser finds 28 estimates per revision because it also accepts the client's three inline name-and-time lines:
 
 | Complete benchmark name | Legacy result | Base ns/op | Head ns/op |
 | --- | --- | ---: | ---: |
@@ -41,18 +41,18 @@ Checks passed in a disposable clone:
 
 ```sh
 actionlint .github/workflows/benchmarks.yml
-uvx ruff check scripts/benchmark_report_inputs.py
-uvx ruff format --check scripts/benchmark_report_inputs.py
-uvx ty check scripts/benchmark_report_inputs.py
+BASE_SHA='<base-commit>' HEAD_SHA='<head-commit>' \
+  go run scripts/benchmark_report_inputs.go assemble --logs benchmark-logs --output manifests
 ```
 
-The helper assembled manifests from copied captured logs plus fixture environment records. A locally built `benchreport report --parser criterion` accepted those manifests and the proposed configuration, producing comparison, presentation, Markdown, bounded comment, and reproduction outputs with `gate: disabled`. Removing the YSON base log caused assembly to fail. The current shared [CLI and action integration tests](../../tests/report-action.py) cover schema validation and replay behavior; fixture environment records used locally are not a new runner measurement.
+The helper assembled manifests from copied captured logs plus fixture environment records. A locally built `benchreport report --parser criterion` accepted those manifests and the proposed configuration, producing comparison, presentation, Markdown, bounded comment, and reproduction outputs with `gate: disabled`. Removing the YSON base log caused assembly to fail. The current shared [CLI and action integration tests](../../tests/reportaction) cover schema validation and replay behavior; fixture environment records used locally are not a new runner measurement.
 
-The independent numeric oracle is [verify.py](verify.py). It imports the retained legacy parser, converts its source display decimals with `Decimal`, and compares every estimate and suite count against normalization. From this repository, reproduce it without consumer compilation:
+The independent numeric oracle is [Go verification](verify/main.go). It implements the documented legacy regex and adjacent-line matching semantics independently of the production adapter, converts source decimals with exact rational arithmetic, and checks every estimate and suite count. It does not import or execute the old consumer parser. Tests run this oracle against the archived fixtures and verify that the patch embeds the tested producer source. From this repository, reproduce it without consumer compilation:
 
 ```sh
 go build -o /tmp/benchreport-stage7 ./cmd/benchreport
-python3 migrations/ytsaurus-rs/verify.py --consumer /path/to/disposable/ytsaurus-rs --binary /tmp/benchreport-stage7
+go test ./migrations/ytsaurus-rs/...
+go run ./migrations/ytsaurus-rs/verify --binary /tmp/benchreport-stage7
 ```
 
 ## Apply and rollback

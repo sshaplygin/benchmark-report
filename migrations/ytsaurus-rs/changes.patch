@@ -36,7 +36,7 @@ index 0000000..9007ba8
 +  }
 +}
 diff --git a/.github/workflows/benchmarks.yml b/.github/workflows/benchmarks.yml
-index 5c296db..e2062d6 100644
+index 5c296db..85142a4 100644
 --- a/.github/workflows/benchmarks.yml
 +++ b/.github/workflows/benchmarks.yml
 @@ -17,13 +17,11 @@ on:
@@ -44,7 +44,7 @@ index 5c296db..e2062d6 100644
        - ".cargo/config.toml"
        - "rust-toolchain.toml"
 -      - "scripts/compare_criterion.py"
-+      - "scripts/benchmark_report_inputs.py"
++      - "scripts/benchmark_report_inputs.go"
 +      - ".github/benchmark-report.json"
  
 -# A pull request from a fork still receives a read-only token, so its benchmark
@@ -86,14 +86,16 @@ index 5c296db..e2062d6 100644
  
        - name: Restore Rust cache
          uses: Swatinem/rust-cache@v2
-@@ -100,59 +103,90 @@ jobs:
+@@ -100,59 +103,94 @@ jobs:
            cargo bench --locked -p "${{ matrix.package }}" \
              --bench "${{ matrix.bench }}" -- --noplot 2>&1 | tee benchmarks.txt
  
 +      - name: Install the input-producer runner
-+        uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # v5
++        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
++        with:
++          go-version: '1.25.0'
 +      - name: Record the shared compiler and runner environment
-+        run: uv run --no-project --no-python-downloads python pr/scripts/benchmark_report_inputs.py record
++        run: go run pr/scripts/benchmark_report_inputs.go record
 +
        - name: Upload benchmark logs
          if: always()
@@ -148,7 +150,9 @@ index 5c296db..e2062d6 100644
 -      - name: Post comparison on the pull request
 -        if: github.event.pull_request.head.repo.full_name == github.repository
 +      - name: Install the input-producer runner
-+        uses: astral-sh/setup-uv@e58605a9b6da7c637471fab8847a5e5a6b8df081 # v5
++        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
++        with:
++          go-version: '1.25.0'
 +      - name: Assemble explicit suite manifests
          env:
 -          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -162,7 +166,7 @@ index 5c296db..e2062d6 100644
 -        uses: actions/upload-artifact@v4
 +          BASE_SHA: ${{ github.event.pull_request.base.sha }}
 +          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-+        run: uv run --no-project --no-python-downloads python pr/scripts/benchmark_report_inputs.py assemble --logs benchmark-logs --output manifests
++        run: go run pr/scripts/benchmark_report_inputs.go assemble --logs benchmark-logs --output manifests
 +      - name: Generate complete report and bounded comment
 +        id: report
 +        uses: sshaplygin/benchmark-report/report@d64cc0a04a3ceba58f2492a3cf87b99dce3b9d0c
@@ -210,81 +214,156 @@ index 5c296db..e2062d6 100644
 +      - name: Apply the configured gate after publication
 +        if: needs.report.outputs.gate == 'failed'
 +        run: exit 1
-diff --git a/scripts/benchmark_report_inputs.py b/scripts/benchmark_report_inputs.py
+diff --git a/scripts/benchmark_report_inputs.go b/scripts/benchmark_report_inputs.go
 new file mode 100644
-index 0000000..e9b5dc9
+index 0000000..63c35df
 --- /dev/null
-+++ b/scripts/benchmark_report_inputs.py
-@@ -0,0 +1,72 @@
-+#!/usr/bin/env python3
-+"""Record Criterion environment and assemble the four completed suite inputs."""
++++ b/scripts/benchmark_report_inputs.go
+@@ -0,0 +1,147 @@
++// Command benchmark_report_inputs records and assembles four completed Criterion suites.
++package main
 +
-+import argparse
-+import json
-+import os
-+import subprocess
-+from pathlib import Path
++import (
++	"encoding/json"
++	"flag"
++	"fmt"
++	"os"
++	"os/exec"
++	"path/filepath"
++	"reflect"
++	"strings"
++)
 +
-+SUITES = {
-+    "client": ("ytsaurus-client", "rows"),
-+    "job": ("ytsaurus-job", "job_throughput"),
-+    "skiff": ("ytsaurus-skiff", "codec_throughput"),
-+    "yson": ("ytsaurus-yson", "yson_benchmark"),
++type environment struct {
++	Toolchain string `json:"toolchain"`
++	OS        string `json:"os"`
++	Arch      string `json:"arch"`
++	Runner    string `json:"runner"`
++}
++type suite struct {
++	ID      string   `json:"id"`
++	Parser  parser   `json:"parser"`
++	Command string   `json:"command"`
++	Files   []string `json:"files"`
++}
++type parser struct {
++	Name    string `json:"name"`
++	Version string `json:"version"`
++}
++type manifest struct {
++	SchemaVersion  int         `json:"schema_version"`
++	Revision       string      `json:"revision"`
++	Environment    environment `json:"environment"`
++	ExpectedSuites []string    `json:"expected_suites"`
++	Suites         []suite     `json:"suites"`
 +}
 +
++var suites = []struct{ id, pkg, bench string }{{"client", "ytsaurus-client", "rows"}, {"job", "ytsaurus-job", "job_throughput"}, {"skiff", "ytsaurus-skiff", "codec_throughput"}, {"yson", "ytsaurus-yson", "yson_benchmark"}}
 +
-+def main() -> None:
-+    parser = argparse.ArgumentParser(description=__doc__)
-+    parser.add_argument("mode", choices=("record", "assemble"))
-+    parser.add_argument("--logs", type=Path)
-+    parser.add_argument("--output", type=Path)
-+    args = parser.parse_args()
-+    if args.mode == "record":
-+        toolchain = subprocess.check_output(["rustc", "--version"], text=True).strip()
-+        Path("environment.json").write_text(
-+            json.dumps(
-+                {
-+                    "toolchain": toolchain,
-+                    "os": "linux",
-+                    "arch": "amd64",
-+                    "runner": "github-hosted:ubuntu-24.04",
-+                }
-+            )
-+            + "\n"
-+        )
-+        return
-+    if args.logs is None or args.output is None:
-+        parser.error("assemble requires --logs and --output")
-+    environments = []
-+    suites = {"base": [], "head": []}
-+    for suite, (package, bench) in SUITES.items():
-+        directory = args.logs / f"criterion-main-vs-pr-{suite}"
-+        environments.append(json.loads((directory / "environment.json").read_text()))
-+        for side, folder in (("base", "base"), ("head", "pr")):
-+            log = directory / folder / "benchmarks.txt"
-+            if not log.is_file() or log.stat().st_size == 0:
-+                raise ValueError(f"missing or empty suite log: {log}")
-+            suites[side].append(
-+                {
-+                    "id": suite,
-+                    "parser": {"name": "criterion", "version": "1"},
-+                    "command": f"cargo bench --locked -p {package} --bench {bench} -- --noplot",
-+                    "files": [str(log.resolve())],
-+                }
-+            )
-+    if any(environment != environments[0] for environment in environments):
-+        raise ValueError("suite toolchains or runner environments differ")
-+    args.output.mkdir(parents=True, exist_ok=True)
-+    for side, variable in (("base", "BASE_SHA"), ("head", "HEAD_SHA")):
-+        manifest = {
-+            "schema_version": 1,
-+            "revision": os.environ[variable],
-+            "environment": environments[0],
-+            "expected_suites": list(SUITES),
-+            "suites": suites[side],
-+        }
-+        (args.output / f"{side}.json").write_text(json.dumps(manifest, indent=2) + "\n")
-+
-+
-+if __name__ == "__main__":
-+    main()
++func main() {
++	if err := run(os.Args[1:]); err != nil {
++		fmt.Fprintln(os.Stderr, err)
++		os.Exit(1)
++	}
++}
++func writeJSON(name string, value any) error {
++	data, err := json.MarshalIndent(value, "", "  ")
++	if err != nil {
++		return err
++	}
++	return os.WriteFile(name, append(data, '\n'), 0644)
++}
++func run(args []string) error {
++	if len(args) == 0 {
++		return fmt.Errorf("requires record or assemble")
++	}
++	flags := flag.NewFlagSet(args[0], flag.ContinueOnError)
++	logs := flags.String("logs", "", "downloaded suite directory")
++	out := flags.String("output", "", "manifest destination")
++	if err := flags.Parse(args[1:]); err != nil {
++		return err
++	}
++	if flags.NArg() != 0 {
++		return fmt.Errorf("unexpected arguments")
++	}
++	switch args[0] {
++	case "record":
++		data, err := exec.Command("rustc", "--version").Output()
++		if err != nil {
++			return err
++		}
++		toolchain := strings.TrimSpace(string(data))
++		if toolchain == "" {
++			return fmt.Errorf("empty compiler identity")
++		}
++		return writeJSON("environment.json", environment{toolchain, "linux", "amd64", "github-hosted:ubuntu-24.04"})
++	case "assemble":
++		if *logs == "" || *out == "" {
++			return fmt.Errorf("assemble requires --logs and --output")
++		}
++		return assemble(*logs, *out, os.Getenv("BASE_SHA"), os.Getenv("HEAD_SHA"))
++	default:
++		return fmt.Errorf("unsupported mode %q", args[0])
++	}
++}
++func assemble(logs, out, base, head string) error {
++	if base == "" || head == "" {
++		return fmt.Errorf("BASE_SHA and HEAD_SHA required")
++	}
++	var expected []string
++	var shared environment
++	bySide := map[string][]suite{"base": {}, "head": {}}
++	for i, s := range suites {
++		dir := filepath.Join(logs, "criterion-main-vs-pr-"+s.id)
++		data, err := os.ReadFile(filepath.Join(dir, "environment.json"))
++		if err != nil {
++			return err
++		}
++		var env environment
++		if err = json.Unmarshal(data, &env); err != nil {
++			return err
++		}
++		if env.Toolchain == "" || env.OS == "" || env.Arch == "" || env.Runner == "" {
++			return fmt.Errorf("incomplete environment for %s", s.id)
++		}
++		if i == 0 {
++			shared = env
++		} else if !reflect.DeepEqual(shared, env) {
++			return fmt.Errorf("suite toolchains or runner environments differ")
++		}
++		expected = append(expected, s.id)
++		for _, side := range []string{"base", "head"} {
++			folder := side
++			if side == "head" {
++				folder = "pr"
++			}
++			log := filepath.Join(dir, folder, "benchmarks.txt")
++			info, err := os.Stat(log)
++			if err != nil || !info.Mode().IsRegular() || info.Size() == 0 {
++				return fmt.Errorf("missing or empty suite log: %s", log)
++			}
++			physical, err := filepath.EvalSymlinks(log)
++			if err != nil {
++				return err
++			}
++			physical, err = filepath.Abs(physical)
++			if err != nil {
++				return err
++			}
++			bySide[side] = append(bySide[side], suite{s.id, parser{"criterion", "1"}, fmt.Sprintf("cargo bench --locked -p %s --bench %s -- --noplot", s.pkg, s.bench), []string{physical}})
++		}
++	}
++	if err := os.MkdirAll(out, 0755); err != nil {
++		return err
++	}
++	for _, side := range []string{"base", "head"} {
++		revision := base
++		if side == "head" {
++			revision = head
++		}
++		if err := writeJSON(filepath.Join(out, side+".json"), manifest{1, revision, shared, expected, bySide[side]}); err != nil {
++			return err
++		}
++	}
++	return nil
++}
