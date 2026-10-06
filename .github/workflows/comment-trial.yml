@@ -31,6 +31,16 @@ jobs:
           report-path: trial.md
           header: benchmark-report-trial-main
           summary: 'false'
+      - name: Record metadata before unchanged publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate --slurp \
+            | jq -e '[.[][] | select(.user.login == "github-actions[bot]" and (.body | endswith("<!-- Sticky Pull Request Commentbenchmark-report-trial-main -->")))] | if length == 1 then .[0] else error("expected one main trial comment") end' \
+            > before-main.json
+          # GitHub timestamps have second resolution.
+          sleep 2
       - id: unchanged
         uses: sshaplygin/benchmark-report@50f193333540d8320ad4a81459da8fe5fc8df600
         with:
@@ -43,15 +53,32 @@ jobs:
           report-path: trial.md
           header: benchmark-report-trial-separate
           summary: 'false'
-      - name: Check stable identity and separate headers
+      - name: Check stable identity, separate headers, and unchanged timestamp
         env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
           FIRST: ${{ steps.first.outputs.created-comment-id || steps.first.outputs.previous-comment-id }}
           UPDATED: ${{ steps.updated.outputs.previous-comment-id }}
           UNCHANGED: ${{ steps.unchanged.outputs.previous-comment-id }}
           SEPARATE: ${{ steps.separate.outputs.created-comment-id || steps.separate.outputs.previous-comment-id }}
         run: |
-          test -n "$FIRST" && test "$FIRST" = "$UPDATED" && test "$FIRST" = "$UNCHANGED"
-          test -n "$SEPARATE" && test "$FIRST" != "$SEPARATE"
+          gh api "repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" --paginate --slurp | jq '[.[][]]' > comments.json
+          jq -e --arg first "$FIRST" --arg updated "$UPDATED" --arg unchanged "$UNCHANGED" --arg separate "$SEPARATE" \
+            --slurpfile before before-main.json '
+              def managed($marker):
+                map(select(.user.login == "github-actions[bot]" and (.body | endswith($marker))))
+                | if length == 1 then .[0] else error("expected one comment per header") end;
+              . as $comments
+              | ($comments | managed("<!-- Sticky Pull Request Commentbenchmark-report-trial-main -->")) as $main
+              | ($comments | managed("<!-- Sticky Pull Request Commentbenchmark-report-trial-separate -->")) as $other
+              | ($first == ($main.id | tostring) or $first == $main.node_id)
+                and $updated == $main.node_id and $unchanged == $main.node_id
+                and ($separate == ($other.id | tostring) or $separate == $other.node_id)
+                and $main.id != $other.id
+                and $main.body == $before[0].body
+                and $main.updated_at == $before[0].updated_at
+                and ($main.body | startswith("Benchmark Report publication trial — updated."))
+            ' comments.json
   insufficient-permission:
     if: github.event.pull_request.number == 6 && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]' && contains(github.event.pull_request.labels.*.name, 'benchmark-report-live-trial')
     runs-on: ubuntu-24.04
