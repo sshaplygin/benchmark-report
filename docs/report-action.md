@@ -2,7 +2,7 @@
 
 The [report action](../report/action.yml) consumes completed manifests and logs. It installs the binary version mapped by its commit, generates reports and a full reproduction bundle, and returns paths. It does not execute benchmark commands or publish comments. The root [publication action](publication.md) remains independently usable with an existing Markdown file.
 
-No binary release is published yet. The action's download URLs become usable after a reviewed release; current CI tests substitute locally built candidate archives for the download transport and run the complete composite action. Build the CLI from source for local use meanwhile.
+Binary archives and SHA-256 checksums are distributed through [GitHub Releases](https://github.com/sshaplygin/benchmark-report/releases). The action requires the release matching its version mapping. CI tests substitute locally built candidate archives for the download transport and run the complete composite action.
 
 ## Inputs and results
 
@@ -43,5 +43,7 @@ go run ./cmd/package --output-dir dist
 ```
 
 Archives contain both executables, version/platform metadata, checksums for members, the project's [MPL-2.0 license](../LICENSE), and the license texts and notices of their dependencies. `go run ./cmd/package --release --output-dir dist` requires a nonempty project `LICENSE` and marks the archive as a release artifact. Publication requires separate authorization; no packaging command publishes a release.
+
+The manual [release workflow](../.github/workflows/release.yml) builds all four native archives, verifies their contents and checksums, and tests installation and captured report replay before uploading artifacts. It has read permissions and does not publish a release. Publish those verified artifacts under `vVERSION`, with that tag pointing to the workflow's exact source commit. `LICENSES/NOTICE.txt` in each archive links to the matching project source.
 
 CI runs native archive installation and captured-consumer replay on `ubuntu-24.04`, `ubuntu-24.04-arm`, `macos-14`, and `macos-15-intel`. These labels cover both architectures according to the [GitHub runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners). Test harnesses use Go and Python on the build side; runtime checks reject attempts by the installer or generator wrapper to invoke them.
