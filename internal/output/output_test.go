@@ -146,3 +146,60 @@ func TestRootPreventsChangedSymlinkEscape(t *testing.T) {
 		t.Fatal("wrote outside", entries)
 	}
 }
+
+func TestTransactionalDeletionAndRollback(t *testing.T) {
+	for fail := 1; fail <= 3; fail++ {
+		root := t.TempDir()
+		save(t, filepath.Join(root, "a-stale"), "old-a")
+		save(t, filepath.Join(root, "z-new"), "old-z")
+		calls := 0
+		rename := func(a, b string) error {
+			calls++
+			if calls == fail {
+				return errors.New("injected failure")
+			}
+			return os.Rename(a, b)
+		}
+		if err := transaction(root, []Entry{{Path: "z-new", Data: []byte("new-z")}}, []string{"a-stale"}, nil, rename); err == nil {
+			t.Fatal("accepted injected failure")
+		}
+		for name, want := range map[string]string{"a-stale": "old-a", "z-new": "old-z"} {
+			got, err := os.ReadFile(filepath.Join(root, name))
+			if err != nil || string(got) != want {
+				t.Fatal("lost original after failed deletion", name, err)
+			}
+		}
+	}
+	root := t.TempDir()
+	save(t, filepath.Join(root, "stale"), "obsolete")
+	save(t, filepath.Join(root, "unmanaged"), "keep")
+	if err := Transaction(root, []Entry{{Path: "new", Data: []byte("new")}}, []string{"stale", "missing/unused"}, nil); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "stale")); !os.IsNotExist(err) {
+		t.Fatal("stale file left")
+	}
+	if _, err := os.Stat(filepath.Join(root, "missing")); !os.IsNotExist(err) {
+		t.Fatal("created nonexistent stale directory")
+	}
+	got, _ := os.ReadFile(filepath.Join(root, "unmanaged"))
+	if string(got) != "keep" {
+		t.Fatal("deleted arbitrary file")
+	}
+}
+func TestDeletionInputAndSymlinkProtection(t *testing.T) {
+	root := t.TempDir()
+	source := filepath.Join(root, "source")
+	save(t, source, "input")
+	if err := Transaction(root, []Entry{{Path: "new", Data: []byte("new")}}, []string{"source"}, []string{source}); err == nil {
+		t.Fatal("deleted input")
+	}
+	outside := filepath.Join(t.TempDir(), "outside")
+	save(t, outside, "safe")
+	if err := os.Symlink(outside, filepath.Join(root, "link")); err != nil {
+		t.Fatal(err)
+	}
+	if err := Transaction(root, []Entry{{Path: "new", Data: []byte("new")}}, []string{"link"}, nil); err == nil {
+		t.Fatal("deleted symlink")
+	}
+}

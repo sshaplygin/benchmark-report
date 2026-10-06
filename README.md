@@ -1,6 +1,6 @@
 # Benchmark Report
 
-Benchmark Report provides a composite GitHub Action that publishes a prepared Markdown report through `sticky-pull-request-comment`. The Go CLI normalizes and compares Go benchmark text and Rust Criterion logs, renders configurable Markdown/JSON, and verifies offline replay bundles. No CLI release is available yet.
+Benchmark Report provides a composite GitHub Action that publishes a prepared Markdown report through `sticky-pull-request-comment`. The Go CLI normalizes and compares Go benchmark text and Rust Criterion logs, renders configurable Markdown/JSON, verifies offline replay bundles, and exports absolute measurements for benchmark history. No CLI release is available yet.
 
 See [output examples](docs/output-examples.md) for Go and Criterion reports, a compact report, allocation and throughput tables, and history JSON.
 
@@ -18,7 +18,7 @@ Existing tools cover parts of this workflow:
 
 These gaps justify a shared parser, comparison model, and renderer. Comment publication is delegated to [sticky-pull-request-comment](https://github.com/marocchino/sticky-pull-request-comment); historical storage and charts remain with github-action-benchmark. The language of an existing action is not a reason to replace it.
 
-The assessment of `github-action-benchmark` is based on its [action inputs](https://github.com/benchmark-action/github-action-benchmark/blob/master/action.yml), [Markdown renderer](https://github.com/benchmark-action/github-action-benchmark/blob/master/src/write.ts), and [package definition](https://github.com/benchmark-action/github-action-benchmark/blob/master/package.json), inspected on 2026-10-03. Recheck these interfaces before implementing the integration.
+The assessment of `github-action-benchmark` is based on its [action inputs](https://github.com/benchmark-action/github-action-benchmark/blob/master/action.yml), [Markdown renderer](https://github.com/benchmark-action/github-action-benchmark/blob/master/src/write.ts), and [package definition](https://github.com/benchmark-action/github-action-benchmark/blob/master/package.json). The tested history integration and dependency pin are recorded in [History](docs/history.md).
 
 ## Recommended use
 
@@ -96,16 +96,18 @@ The first command writes the enabled reports, effective configuration, compariso
 
 Use `--config FILE` to select metrics, columns, grouping, filters, sections, and output filenames. See [configuration](docs/configuration.md) for the complete contract. A standalone render bundle reproduces presentation from its saved comparison. A full bundle for repeating normalization and calculation will be added with the generator action.
 
-## Planned history export
+## Export benchmark history
 
-History export will consume a normalized run:
+Export the normalized head run with history enabled in the configuration:
 
 ```sh
-benchreport export --input head.json \
-  --config benchmark-report.json --output-dir out
+./bin/benchreport export --input out/head.json \
+  --config examples/benchmark-report.json --output-dir out/history
 ```
 
-Use `--parser criterion` for Criterion logs. These commands do not require GitHub credentials. CI artifacts record the inputs, metadata, effective configuration, tool versions, and results needed to reproduce a report. Reproducing a report does not promise identical timings from a new benchmark run.
+The command writes nonempty direction groups and prints their paths as JSON. History filters are independent of report filters. Export runs locally without credentials; the caller passes its files to the pinned external action on primary-branch pushes. See [History](docs/history.md) for the workflow, Pages prerequisites, and integration checks.
+
+Reproducing a saved report does not promise identical timings from a new benchmark run.
 
 ## Documentation
 
@@ -116,6 +118,7 @@ Use `--parser criterion` for Criterion logs. These commands do not require GitHu
 | [Fixtures](docs/fixtures.md) | Captured log provenance and independently calculated acceptance cases |
 | [Configuration](docs/configuration.md) | User controls, defaults, validation, selection rules, and output behavior |
 | [Output examples](docs/output-examples.md) | Expected rendered results and the configuration choices that produce them |
+| [History](docs/history.md) | Tested external action pin, primary-branch workflow, Pages prerequisites, and integration checks |
 | [Publication](docs/publication.md) | Implemented action inputs, dependency pin, event handling, permissions, and comment migration |
 | [Implementation plan](docs/implementation-plan.md) | Ordered delivery stages, definitions of done, reviewer acceptance criteria, and release evidence |
 | [Example configuration](examples/benchmark-report.json) | A complete consumer configuration using the proposed interface |

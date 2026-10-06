@@ -200,7 +200,7 @@ Advisory thresholds: 20% regression, 20% improvement. No statistical analysis wa
 
 ## History JSON
 
-History export is planned for stage 5. For this export example, the Go head measurements above are treated as a completed primary-branch run. The configuration selects two measurements for a small history example; selection is independent of the Markdown profiles above.
+For this export example, the Go head measurements above are treated as a completed primary-branch run. The configuration selects two measurements for a small history example; selection is independent of the Markdown profiles above.
 
 ```json
 {
@@ -223,7 +223,8 @@ Expected `benchmark-smaller.json`, passed to `customSmallerIsBetter`:
   {
     "name": "[\"go\",\"example.org/socket/engineio/packet\",\"BenchmarkDecoder-4\",\"time\"]",
     "unit": "ns/op",
-    "value": 120
+    "value": 120,
+    "extra": "{\"estimator\":\"median\",\"environment\":{\"toolchain\":\"go1.25.0\",\"os\":\"linux\",\"arch\":\"amd64\",\"runner\":\"benchmark-demo\"}}"
   }
 ]
 ```
@@ -235,7 +236,8 @@ Expected `benchmark-bigger.json`, passed to `customBiggerIsBetter`:
   {
     "name": "[\"go\",\"example.org/socket/engineio/payload\",\"BenchmarkB64Decoder-4\",\"throughput\"]",
     "unit": "B/s",
-    "value": 125000000
+    "value": 125000000,
+    "extra": "{\"estimator\":\"median\",\"environment\":{\"toolchain\":\"go1.25.0\",\"os\":\"linux\",\"arch\":\"amd64\",\"runner\":\"benchmark-demo\"}}"
   }
 ]
 ```

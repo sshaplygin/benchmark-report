@@ -32,9 +32,30 @@ func safeName(name string) error {
 	}
 	return nil
 }
-func commit(directory string, entries []Entry, protected []string, rename func(string, string) error) (err error) {
-	names := map[string]bool{}
+
+// Transaction writes nonempty groups and removes only explicitly named stale files.
+func Transaction(directory string, entries []Entry, remove []string, protected []string) error {
+	return transaction(directory, entries, remove, protected, nil)
+}
+
+type operation struct {
+	Entry
+	Remove bool
+}
+
+func commit(directory string, entries []Entry, protected []string, rename func(string, string) error) error {
+	return transaction(directory, entries, nil, protected, rename)
+}
+func transaction(directory string, entries []Entry, remove []string, protected []string, rename func(string, string) error) (err error) {
+	operations := make([]operation, 0, len(entries)+len(remove))
 	for _, entry := range entries {
+		operations = append(operations, operation{Entry: entry})
+	}
+	for _, path := range remove {
+		operations = append(operations, operation{Entry: Entry{Path: path}, Remove: true})
+	}
+	names := map[string]bool{}
+	for _, entry := range operations {
 		if err := safeName(entry.Path); err != nil {
 			return err
 		}
@@ -43,7 +64,7 @@ func commit(directory string, entries []Entry, protected []string, rename func(s
 		}
 		names[portable(entry.Path)] = true
 	}
-	ordered := append([]Entry(nil), entries...)
+	ordered := append([]operation(nil), operations...)
 	sort.Slice(ordered, func(i, j int) bool { return ordered[i].Path < ordered[j].Path })
 	for i := 1; i < len(ordered); i++ {
 		for j := 0; j < i; j++ {
@@ -154,6 +175,9 @@ func commit(directory string, entries []Entry, protected []string, rename func(s
 	}()
 	// Prepare all bytes before moving any existing destination.
 	for i, entry := range ordered {
+		if entry.Remove {
+			continue
+		}
 		f, e := cap.OpenFile(relative(filepath.Join(stage, fmt.Sprintf("new-%d", i))), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0644)
 		if e != nil {
 			return e
@@ -209,7 +233,7 @@ func commit(directory string, entries []Entry, protected []string, rename func(s
 				break
 			}
 		}
-		for j := len(missing) - 1; j >= 0; j-- {
+		for j := len(missing) - 1; j >= 0 && !entry.Remove; j-- {
 			if e := cap.Mkdir(relative(missing[j]), 0755); e != nil {
 				return rollback(e)
 			}
@@ -223,6 +247,9 @@ func commit(directory string, entries []Entry, protected []string, rename func(s
 			backup[i] = old
 		} else if !os.IsNotExist(e) {
 			return rollback(e)
+		}
+		if entry.Remove {
+			continue
 		}
 		if e := rename(filepath.Join(stage, fmt.Sprintf("new-%d", i)), dest); e != nil {
 			return rollback(e)
