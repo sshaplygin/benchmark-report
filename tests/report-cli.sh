@@ -20,10 +20,11 @@ for parser in go criterion; do
 done
 printf '%s\n' '{"schema_version":1,"comparison":{"fail_on_regression":true,"regression_percent":0.000001}}' > "$test_dir/config.json"
 "$binary" report --parser go --base-manifest testdata/captured/go-pr15/base-manifest.json --head-manifest testdata/captured/go-pr15/head-manifest.json --config "$test_dir/config.json" --output-dir "$test_dir/gate" > "$test_dir/gate-result.json"
-python3 - "$test_dir/gate-result.json" <<'PY'
-import json,sys,os
-r=json.load(open(sys.argv[1]));assert r['gate']=='failed';assert all(os.path.isfile(p) for p in r['files'].values())
-PY
+jq -e '.gate == "failed"' "$test_dir/gate-result.json" >/dev/null
+jq -j '.files[] | ., "\u0000"' "$test_dir/gate-result.json" > "$test_dir/gate-paths"
+while IFS= read -r -d '' result_path; do
+ test -f "$result_path"
+done < "$test_dir/gate-paths"
 if [[ -n "${BENCHREPORT_TEST_BENCHSTAT:-}" ]]; then
  printf '%s\n' '{"schema_version":1,"comparison":{"statistics":"benchstat"}}' > "$test_dir/stats.json"
  "$binary" report --parser go --base-manifest testdata/captured/go-pr15/base-manifest.json --head-manifest testdata/captured/go-pr15/head-manifest.json --config "$test_dir/stats.json" --benchstat-path "$BENCHREPORT_TEST_BENCHSTAT" --output-dir "$test_dir/stats" >/dev/null

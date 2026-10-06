@@ -106,7 +106,9 @@ jobs:
       - name: Build native candidate archive and dependency notices
         run: go run ./cmd/package --output-dir "$RUNNER_TEMP/packages"
       - name: Verify installation and reject damaged or mismatched assets
-        run: python3 tests/install.py --assets "$RUNNER_TEMP/packages"
+        env:
+          BENCHREPORT_TEST_ASSETS: ${{ runner.temp }}/packages
+        run: go test -count=1 -v ./tests/installer
       - name: Select local candidate assets for composite smoke test
         run: echo "$GITHUB_WORKSPACE/tests/installer-fixture" >> "$GITHUB_PATH"
       - name: Run complete report action with native candidate tools
