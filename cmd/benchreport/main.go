@@ -9,6 +9,7 @@ import (
 	"github.com/sshaplygin/benchmark-report/internal/compare"
 	"github.com/sshaplygin/benchmark-report/internal/config"
 	"github.com/sshaplygin/benchmark-report/internal/contracts"
+	"github.com/sshaplygin/benchmark-report/internal/history"
 	"github.com/sshaplygin/benchmark-report/internal/input"
 	"github.com/sshaplygin/benchmark-report/internal/model"
 	"github.com/sshaplygin/benchmark-report/internal/output"
@@ -28,6 +29,7 @@ Usage:
   benchreport normalize --parser go|criterion --manifest FILE --out FILE
   benchreport compare --base FILE --head FILE [--config FILE] --out FILE [--allow-environment-mismatch] [--benchstat-path FILE]
   benchreport render --input FILE [--config FILE] --output-dir DIR [--reproduction FILE]
+  benchreport export --input FILE [--config FILE] --output-dir DIR
   benchreport config validate --config FILE
   benchreport --version
   benchreport --help
@@ -49,6 +51,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stdout, "benchreport %s\n", version)
 			return 0
 		}
+	}
+	if args[0] == "export" {
+		return runExport(args[1:], stdout, stderr)
 	}
 	if args[0] == "render" {
 		return runRender(args[1:], stdout, stderr)
@@ -344,6 +349,94 @@ func runRender(args []string, stdout, stderr io.Writer) int {
 		return 1
 	}
 	if err = output.Commit(*directory, entries, protected); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	return 0
+}
+
+func runExport(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 1 && args[0] == "--version" {
+		fmt.Fprintf(stdout, "benchreport %s\n", version)
+		return 0
+	}
+	flags := flag.NewFlagSet("export", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	flags.Usage = func() {
+		fmt.Fprintln(stdout, "Usage: benchreport export --input FILE [--config FILE] --output-dir DIR\nRequires history.enabled. Success prints JSON containing only nonempty files.smaller/files.bigger absolute paths.")
+	}
+	path := flags.String("input", "", "normalized run")
+	configPath := flags.String("config", "", "optional version 1 configuration")
+	directory := flags.String("output-dir", "", "history output directory")
+	if code := parseFlags(flags, args); code >= 0 {
+		return code
+	}
+	if *path == "" || *directory == "" || flags.NArg() != 0 || explicitEmpty(flags, "config", *configPath) {
+		fmt.Fprintln(stderr, "export requires --input, --output-dir and nonempty supplied paths")
+		return 1
+	}
+	run, err := input.LoadRun(*path)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	cfg, err := config.Load(*configPath)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	files, err := history.Build(run, cfg.History)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	protected := []string{*path}
+	if *configPath != "" {
+		protected = append(protected, *configPath)
+	}
+	for _, raw := range run.Inputs {
+		resolved, err := input.ResolveReference(*path, raw.Path)
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+		protected = append(protected, resolved)
+	}
+	entries := []output.Entry{}
+	remove := []string{}
+	if files.Smaller != nil {
+		entries = append(entries, output.Entry{Path: cfg.History.SmallerFile, Data: files.Smaller})
+	} else {
+		remove = append(remove, cfg.History.SmallerFile)
+	}
+	if files.Bigger != nil {
+		entries = append(entries, output.Entry{Path: cfg.History.BiggerFile, Data: files.Bigger})
+	} else {
+		remove = append(remove, cfg.History.BiggerFile)
+	}
+	if err = output.Transaction(*directory, entries, remove, protected); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	absolute, err := filepath.Abs(*directory)
+	if err == nil {
+		absolute, err = filepath.EvalSymlinks(absolute)
+	}
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	result := struct {
+		SchemaVersion int               `json:"schema_version"`
+		Files         map[string]string `json:"files"`
+	}{SchemaVersion: 1, Files: map[string]string{}}
+	if files.Smaller != nil {
+		result.Files["smaller"] = filepath.Join(absolute, filepath.FromSlash(cfg.History.SmallerFile))
+	}
+	if files.Bigger != nil {
+		result.Files["bigger"] = filepath.Join(absolute, filepath.FromSlash(cfg.History.BiggerFile))
+	}
+	if err = json.NewEncoder(stdout).Encode(result); err != nil {
 		fmt.Fprintln(stderr, err)
 		return 1
 	}

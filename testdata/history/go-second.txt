@@ -1,0 +1,12 @@
+goos: linux
+goarch: amd64
+pkg: example.org/a
+cpu: synthetic
+BenchmarkSame/sub-4 10 0.1 ns/op 0 B/op 0 allocs/op 2 MB/s
+BenchmarkSame/sub-4 10 62 ns/op 2 B/op 1 allocs/op 4 MB/s
+BenchmarkSame/sub-4 10 62 ns/op 4 B/op 2 allocs/op 6 MB/s
+BenchmarkSame/sub-4 10 80.04 ns/op 6 B/op 3 allocs/op 8 MB/s
+pkg: example.org/b
+BenchmarkSame/sub-4 10 10 ns/op 0 B/op 0 allocs/op
+BenchmarkSame/sub-8 10 20 ns/op 0 B/op 0 allocs/op
+PASS

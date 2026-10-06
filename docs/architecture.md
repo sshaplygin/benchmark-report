@@ -1,10 +1,10 @@
 # Architecture
 
-This document specifies the first release. Version 1 schemas and serialization rules are defined in [Contracts](contracts.md); normalization, comparison, configuration validation, rendering, and verified presentation replay are implemented. History export remains pending the stages in the [implementation plan](implementation-plan.md).
+This document specifies the first release. Version 1 schemas and serialization rules are defined in [Contracts](contracts.md); normalization, comparison, configuration validation, rendering, and verified presentation replay are implemented. History export is also implemented; action packaging and full calculation bundles remain pending the [implementation plan](implementation-plan.md).
 
 ## Boundaries
 
-The planned executable is `benchreport`. Its parsing, comparison, rendering, and export code is written in Go. A future report action installs the released binary and invokes it. The root publication action already accepts a completed Markdown file and delegates GitHub comment operations to sticky-pull-request-comment. Go consumers and Rust consumers use the same reporting interface.
+The executable is `benchreport`. Its parsing, comparison, rendering, and export code is written in Go. A future report action installs the released binary and invokes it. The root publication action already accepts a completed Markdown file and delegates GitHub comment operations to sticky-pull-request-comment. Go consumers and Rust consumers use the same reporting interface.
 
 The first release supports Linux and macOS on amd64 and arm64. Installation uses release assets and published SHA-256 checksums. It does not install Go in consumer workflows. The action version selects a matching binary version; consumers pin the action to a commit. The release process must verify that mapping.
 
@@ -79,11 +79,11 @@ Serialize the complete benchmark workflow per PR and report header with cancella
 
 Benchmark execution jobs use read-only repository permissions and no publication secrets. The default fork behavior is summary plus artifacts. A privileged publisher must never execute PR-supplied binaries, actions, scripts, or configuration hooks. Cross-workflow publication for forks is outside the first release.
 
-Report rendering must escape benchmark names, revision labels, and metadata for the selected context. No user-supplied value becomes shell code. Configuration cannot read environment secrets or invoke commands. The publication action rejects oversized comments rather than modifying supplied Markdown. The planned renderer will produce a shortened comment with deterministic row truncation, an omitted-row count, and a link to the complete artifact when needed. Its comment budget must include the upstream marker defined in Publication. Fail if the fixed content alone exceeds that budget.
+Report rendering must escape benchmark names, revision labels, and metadata for the selected context. No user-supplied value becomes shell code. Configuration cannot read environment secrets or invoke commands. The publication action rejects oversized comments rather than modifying supplied Markdown. Stage 6 will add a shortened comment with deterministic row truncation, an omitted-row count, and a link to the complete artifact when needed. Its comment budget must include the upstream marker defined in Publication. Fail if the fixed content alone exceeds that budget.
 
 ## History integration
 
-Export absolute measurements from primary-branch runs, not base/head deltas. Produce `benchmark-smaller.json` and `benchmark-bigger.json` as needed. Each contains entries with `name`, `unit`, and `value`; optional `range` and `extra` describe the estimator or bounds. Both exports use the same estimates as the local reports. Never convert an unavailable metric to zero.
+Export absolute measurements from primary-branch runs, not base/head deltas. Produce `benchmark-smaller.json` and `benchmark-bigger.json` as needed. Each contains entries with `name`, `unit`, and numeric `value`; `extra` records estimator and environment as text, and Criterion `range` records bounds as text. Numeric compatibility and stdout path discovery are defined in [Contracts](contracts.md#history-serialization-and-outputs). Both exports use the same estimates as the local reports. Never convert an unavailable metric to zero.
 
 The caller invokes `github-action-benchmark` with `customSmallerIsBetter` or `customBiggerIsBetter` and the matching file. Do not invoke it for an empty direction group. Configure `comment-always`, `comment-on-alert`, `summary-always`, and `fail-on-alert` as false. Use stable, distinct history suite names for different directions, execution environments, and estimator definitions. A change in environment or estimator starts a new series.
 

@@ -1,0 +1,119 @@
+# Copy into the consumer's .github/workflows/. Set BENCHREPORT_SOURCE_SHA to
+# an accepted Stage 5 commit and add .github/benchmark-history.json with
+# schema_version: 1, history.enabled: true and the desired history.metrics.
+# The source build is temporary until released binary/action packaging exists.
+name: Primary-branch benchmark history
+on:
+  push:
+    branches: [main] # Change to the consumer's primary branch.
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Require a selected reporting source commit
+        env:
+          SOURCE_SHA: ${{ vars.BENCHREPORT_SOURCE_SHA }}
+        run: |
+          if [[ ! "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo 'Set BENCHREPORT_SOURCE_SHA to a full accepted Stage 5 commit SHA.' >&2
+            exit 1
+          fi
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: sshaplygin/benchmark-report
+          ref: ${{ vars.BENCHREPORT_SOURCE_SHA }}
+          path: .benchmark-report
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: '1.25.0'
+      - name: Build reporting CLI from the selected source commit
+        working-directory: .benchmark-report
+        run: go build -o "$RUNNER_TEMP/benchreport" ./cmd/benchreport
+      - name: Measure the primary-branch revision
+        env:
+          GOTOOLCHAIN: local
+        run: go test -mod=readonly -run '^$' -bench . -benchmem -count=10 ./... > "$RUNNER_TEMP/benchmarks.txt"
+      - name: Normalize and export
+        env:
+          REPORT_CONFIG: .github/benchmark-history.json
+        run: |
+          jq -n --arg revision "$GITHUB_SHA" --arg file "$RUNNER_TEMP/benchmarks.txt" \
+            '{schema_version:1, revision:$revision,
+              environment:{toolchain:"go1.25.0",os:"linux",arch:"amd64",runner:"github-hosted:ubuntu-24.04"},
+              expected_suites:["go"], suites:[{id:"go",parser:{name:"go",version:"1"},
+              command:"go test -mod=readonly -run '\''^$'\'' -bench . -benchmem -count=10 ./...", files:[$file]}]}' \
+            > "$RUNNER_TEMP/inputs.json"
+          "$RUNNER_TEMP/benchreport" normalize --parser go --manifest "$RUNNER_TEMP/inputs.json" --out "$RUNNER_TEMP/run.json"
+          "$RUNNER_TEMP/benchreport" export --input "$RUNNER_TEMP/run.json" --config "$REPORT_CONFIG" --output-dir "$RUNNER_TEMP/history" > "$RUNNER_TEMP/export-paths.json"
+          jq -e '.schema_version == 1 and (.files | length > 0)' "$RUNNER_TEMP/export-paths.json"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: primary-history-${{ github.sha }}
+          path: ${{ runner.temp }}/history/*.json
+          if-no-files-found: error
+
+  publish-history:
+    needs: benchmark
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    permissions:
+      contents: write
+    concurrency:
+      group: benchmark-history-gh-pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: primary-history-${{ github.sha }}
+          path: history-inputs
+      - name: Detect nonempty direction exports
+        id: files
+        run: |
+          if [[ ! -f history-inputs/benchmark-smaller.json && ! -f history-inputs/benchmark-bigger.json ]]; then
+            echo 'No default history direction file found; align the caller configuration filenames.' >&2
+            exit 1
+          fi
+          if [[ -f history-inputs/benchmark-smaller.json ]]; then
+            jq -e 'type == "array" and length > 0' history-inputs/benchmark-smaller.json
+            echo 'smaller=true' >> "$GITHUB_OUTPUT"
+          fi
+          if [[ -f history-inputs/benchmark-bigger.json ]]; then
+            jq -e 'type == "array" and length > 0' history-inputs/benchmark-bigger.json
+            echo 'bigger=true' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Append smaller-is-better history
+        if: steps.files.outputs.smaller == 'true'
+        uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc # v1.22.2
+        with:
+          name: go-linux-amd64-go1.25.0-ubuntu24.04-median-smaller
+          tool: customSmallerIsBetter
+          output-file-path: history-inputs/benchmark-smaller.json
+          benchmark-data-dir-path: dev/bench
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          comment-always: false
+          comment-on-alert: false
+          summary-always: false
+          fail-on-alert: false
+      - name: Append bigger-is-better history
+        if: steps.files.outputs.bigger == 'true'
+        uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc # v1.22.2
+        with:
+          name: go-linux-amd64-go1.25.0-ubuntu24.04-median-bigger
+          tool: customBiggerIsBetter
+          output-file-path: history-inputs/benchmark-bigger.json
+          benchmark-data-dir-path: dev/bench
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          comment-always: false
+          comment-on-alert: false
+          summary-always: false
+          fail-on-alert: false

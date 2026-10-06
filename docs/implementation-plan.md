@@ -2,7 +2,7 @@
 
 Deliver a reusable Go CLI and action that satisfy the [architecture](architecture.md) and [configuration](configuration.md) contracts. This plan defines delivery order and review evidence. It does not authorize changes to the consumer repositories or publication of releases.
 
-The root publication wrapper is implemented against sticky-pull-request-comment and accepts existing Markdown reports. Its contract and current verification scope are in [Publication](publication.md). The generator stages below remain planned; stage 6 covers integration and release acceptance of the wrapper, not a new GitHub API client.
+The root publication wrapper is implemented against sticky-pull-request-comment and accepts existing Markdown reports. Its contract and current verification scope are in [Publication](publication.md). Stage 6 covers integration and release acceptance of the wrapper. Delivery status is tracked in the completion record; the stages below define acceptance requirements.
 
 ## Adapter scope for the PoC
 

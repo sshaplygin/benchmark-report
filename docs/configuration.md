@@ -1,6 +1,6 @@
 # Configuration
 
-This document owns the version 1 configuration contract; configuration loading and validation are implemented, rendering is implemented and history export remains a later stage. The first release uses JSON to allow strict decoding and schema validation without a YAML parser. The [complete example](../examples/benchmark-report.json) selects a package-oriented Markdown report and history export.
+This document owns the version 1 configuration contract; configuration loading and validation are implemented, rendering and history export are implemented. The first release uses JSON to allow strict decoding and schema validation without a YAML parser. The [complete example](../examples/benchmark-report.json) selects a package-oriented Markdown report and history export.
 
 ## Loading and validation
 
@@ -70,9 +70,9 @@ Mandatory disclosures survive section switches: environment mismatch overrides, 
 | `history.smaller_file` | `"benchmark-smaller.json"` | Relative output filename |
 | `history.bigger_file` | `"benchmark-bigger.json"` | Relative output filename |
 
-History selection is independent of report selection. Hiding a row in a PR comment must not remove that metric from its historical series. Export only nonempty direction groups and return their paths explicitly; remove obsolete generated direction files in a reused output directory so a caller cannot upload stale data. If enabled selection yields no metrics, return an error.
+History selection is independent of report selection. Hiding a row in a PR comment must not remove that metric from its historical series. Export only nonempty direction groups and return their paths explicitly; remove an obsolete file only at the currently configured empty-direction filename in a reused output directory so a caller cannot upload stale data. Cleanup and writes commit together; older names and unrelated files are not searched or removed. Callers consume the returned `files.smaller` and `files.bigger` paths. Disabled history and enabled selection yielding no metrics both fail explicitly.
 
-Exported `name` is the canonical measurement key. Units and estimator definitions stay fixed for a series. Changing display precision or report titles does not change exported measurements. The [integration contract](architecture.md#history-integration) owns the caller's action settings and series separation.
+History numbers must retain their exact decimal value through the upstream binary64 shortest-decimal round trip; incompatible values fail with their identity. This restriction is specific to history, as described in [Contracts](contracts.md#history-serialization-and-outputs). Exported `name` is the canonical measurement key. Units and estimator definitions stay fixed for a series. Changing display precision or report titles does not change exported measurements. The [integration contract](architecture.md#history-integration) owns the caller's action settings and series separation.
 
 ## Example profiles
 
