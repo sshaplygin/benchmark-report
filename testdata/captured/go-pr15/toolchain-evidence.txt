@@ -1,0 +1,8 @@
+Detect benchmark-relevant changes	UNKNOWN STEP	2026-10-03T06:49:27.7135141Z stable version resolved as 1.27.1
+Detect benchmark-relevant changes	UNKNOWN STEP	2026-10-03T06:49:37.1260294Z go version go1.27.1 linux/amd64
+Detect benchmark-relevant changes	UNKNOWN STEP	2026-10-03T06:49:39.8367108Z   BASE_SHA: 79a393cf6e5e299fd4faa8e02225f2632e0ea6e8
+Detect benchmark-relevant changes	UNKNOWN STEP	2026-10-03T06:49:39.8367453Z   HEAD_SHA: 89368c38fa1643cbac4478d34aa8d7c3ef38aff1
+Go benchmarks, base vs PR	UNKNOWN STEP	2026-10-03T06:49:49.8287268Z stable version resolved as 1.27.1
+Go benchmarks, base vs PR	UNKNOWN STEP	2026-10-03T06:49:57.6176376Z go version go1.27.1 linux/amd64
+Go benchmarks, base vs PR	UNKNOWN STEP	2026-10-03T06:55:42.4096831Z   BASE_SHA: 79a393cf6e5e299fd4faa8e02225f2632e0ea6e8
+Go benchmarks, base vs PR	UNKNOWN STEP	2026-10-03T06:55:42.4097722Z   HEAD_SHA: 89368c38fa1643cbac4478d34aa8d7c3ef38aff1

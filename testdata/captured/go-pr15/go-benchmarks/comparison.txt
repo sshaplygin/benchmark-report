@@ -1,0 +1,85 @@
+goos: linux
+goarch: amd64
+pkg: github.com/sshaplygin/go-socket.io/engineio/packet
+cpu: INTEL(R) XEON(R) PLATINUM 8573C
+          │  base.txt   │               pr.txt               │
+          │   sec/op    │   sec/op     vs base               │
+Decoder-4   61.15n ± 3%   61.73n ± 2%       ~ (p=0.383 n=10)
+Encoder-4   25.54n ± 2%   25.29n ± 2%  -0.96% (p=0.037 n=10)
+geomean     39.51n        39.51n       -0.01%
+
+          │  base.txt  │               pr.txt                │
+          │    B/op    │    B/op     vs base                 │
+Decoder-4   34.00 ± 0%   34.00 ± 0%       ~ (p=1.000 n=10) ¹
+Encoder-4   2.000 ± 0%   2.000 ± 0%       ~ (p=1.000 n=10) ¹
+geomean     8.246        8.246       +0.00%
+¹ all samples are equal
+
+          │  base.txt  │               pr.txt                │
+          │ allocs/op  │ allocs/op   vs base                 │
+Decoder-4   4.000 ± 0%   4.000 ± 0%       ~ (p=1.000 n=10) ¹
+Encoder-4   2.000 ± 0%   2.000 ± 0%       ~ (p=1.000 n=10) ¹
+geomean     2.828        2.828       +0.00%
+¹ all samples are equal
+
+pkg: github.com/sshaplygin/go-socket.io/engineio/payload
+                 │  base.txt   │               pr.txt               │
+                 │   sec/op    │   sec/op     vs base               │
+StringDecoder-4    1.925µ ± 3%   1.883µ ± 2%  -2.18% (p=0.012 n=10)
+B64Decoder-4       2.432µ ± 1%   2.405µ ± 1%       ~ (p=0.060 n=10)
+BinaryDecoder-4    2.346µ ± 1%   2.329µ ± 1%  -0.70% (p=0.021 n=10)
+StringEncoder-4    1.269µ ± 1%   1.212µ ± 2%  -4.49% (p=0.000 n=10)
+B64Encoder-4       1.999µ ± 2%   1.969µ ± 1%  -1.50% (p=0.007 n=10)
+BinaryEncoder-4    1.272µ ± 5%   1.236µ ± 2%  -2.79% (p=0.000 n=10)
+WriteStringLen-4   142.4n ± 3%   138.9n ± 2%  -2.49% (p=0.020 n=10)
+WriteBinaryLen-4   141.8n ± 4%   140.8n ± 3%       ~ (p=0.926 n=10)
+ReadStringLen-4    134.8n ± 3%   131.2n ± 3%  -2.63% (p=0.015 n=10)
+ReadBinaryLen-4    131.6n ± 3%   129.1n ± 4%       ~ (p=0.172 n=10)
+geomean            646.1n        632.9n       -2.05%
+
+                 │    base.txt    │                pr.txt                 │
+                 │      B/op      │     B/op      vs base                 │
+StringDecoder-4    4.164Ki ± 0%     4.164Ki ± 0%       ~ (p=0.526 n=10)
+B64Decoder-4       6.184Ki ± 0%     6.184Ki ± 0%       ~ (p=0.628 n=10)
+BinaryDecoder-4    4.164Ki ± 0%     4.164Ki ± 0%       ~ (p=0.628 n=10)
+StringEncoder-4      0.000 ± 0%       0.000 ± 0%       ~ (p=1.000 n=10) ¹
+B64Encoder-4       3.375Ki ± 0%     3.375Ki ± 0%       ~ (p=1.000 n=10) ¹
+BinaryEncoder-4      0.000 ± 0%       0.000 ± 0%       ~ (p=1.000 n=10) ¹
+WriteStringLen-4     0.000 ± 0%       0.000 ± 0%       ~ (p=1.000 n=10) ¹
+WriteBinaryLen-4     0.000 ± 0%       0.000 ± 0%       ~ (p=1.000 n=10) ¹
+ReadStringLen-4      0.000 ± 0%       0.000 ± 0%       ~ (p=1.000 n=10) ¹
+ReadBinaryLen-4      0.000 ± 0%       0.000 ± 0%       ~ (p=1.000 n=10) ¹
+geomean                         ²                 +0.00%                ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean
+
+                 │   base.txt   │               pr.txt                │
+                 │  allocs/op   │ allocs/op   vs base                 │
+StringDecoder-4    4.000 ± 0%     4.000 ± 0%       ~ (p=1.000 n=10) ¹
+B64Decoder-4       6.000 ± 0%     6.000 ± 0%       ~ (p=1.000 n=10) ¹
+BinaryDecoder-4    4.000 ± 0%     4.000 ± 0%       ~ (p=1.000 n=10) ¹
+StringEncoder-4    0.000 ± 0%     0.000 ± 0%       ~ (p=1.000 n=10) ¹
+B64Encoder-4       3.000 ± 0%     3.000 ± 0%       ~ (p=1.000 n=10) ¹
+BinaryEncoder-4    0.000 ± 0%     0.000 ± 0%       ~ (p=1.000 n=10) ¹
+WriteStringLen-4   0.000 ± 0%     0.000 ± 0%       ~ (p=1.000 n=10) ¹
+WriteBinaryLen-4   0.000 ± 0%     0.000 ± 0%       ~ (p=1.000 n=10) ¹
+ReadStringLen-4    0.000 ± 0%     0.000 ± 0%       ~ (p=1.000 n=10) ¹
+ReadBinaryLen-4    0.000 ± 0%     0.000 ± 0%       ~ (p=1.000 n=10) ¹
+geomean                       ²               +0.00%                ²
+¹ all samples are equal
+² summaries must be >0 to compute geomean
+
+pkg: github.com/sshaplygin/go-socket.io/engineio/transport
+                 │  base.txt   │               pr.txt               │
+                 │   sec/op    │   sec/op     vs base               │
+ConnParameters-4   729.7n ± 2%   719.0n ± 0%  -1.47% (p=0.002 n=10)
+
+                 │  base.txt  │             pr.txt             │
+                 │    B/op    │    B/op     vs base            │
+ConnParameters-4   152.0 ± 0%   152.0 ± 0%  ~ (p=1.000 n=10) ¹
+¹ all samples are equal
+
+                 │  base.txt  │             pr.txt             │
+                 │ allocs/op  │ allocs/op   vs base            │
+ConnParameters-4   3.000 ± 0%   3.000 ± 0%  ~ (p=1.000 n=10) ¹
+¹ all samples are equal

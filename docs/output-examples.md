@@ -41,7 +41,7 @@ Time is lower-is-better. Signals use a 20% advisory threshold and are not statis
 
 | Benchmark | Base | PR | Change | Signal |
 | --- | ---: | ---: | ---: | --- |
-| B64Decoder-4 | 2.0 µs | 2.1 µs | +5.0% | ℹ️ below threshold |
+| B64Decoder-4 | 2 µs | 2.1 µs | +5.0% | ℹ️ below threshold |
 | NewDecoder-4 | — | 900 ns | — | added |
 | RemovedDecoder-4 | 700 ns | — | — | removed |
 | ZeroBaseline-4 | 0 ns | 5 ns | — | zero baseline |
@@ -176,13 +176,13 @@ Time is lower-is-better. Signals use a 20% advisory threshold. Statistical signi
 
 | Benchmark | Base | PR | Change | Samples | Signal |
 | --- | ---: | ---: | ---: | --- | --- |
-| rows/encode | 4.0 µs | 4.2 µs | +5.0% | — | ℹ️ below threshold |
+| rows/encode | 4 µs | 4.2 µs | +5.0% | — | ℹ️ below threshold |
 
 #### skiff
 
 | Benchmark | Base | PR | Change | Samples | Signal |
 | --- | ---: | ---: | ---: | --- | --- |
-| codec/decode | 2.0 µs | 1.5 µs | -25.0% | — | ✅ improved |
+| codec/decode | 2 µs | 1.5 µs | -25.0% | — | ✅ improved |
 
 #### yson
 
@@ -201,8 +201,8 @@ For this export example, the Go head measurements above are treated as a complet
     "enabled": true,
     "metrics": ["time", "throughput"],
     "include": [
-      "^\\[\"go\",\"example\\.org/socket/engineio/packet\",\"Decoder-4\",\"time\"\\]$",
-      "^\\[\"go\",\"example\\.org/socket/engineio/payload\",\"B64Decoder-4\",\"throughput\"\\]$"
+      "^\\[\"go\",\"example\\.org/socket/engineio/packet\",\"BenchmarkDecoder-4\",\"time\"\\]$",
+      "^\\[\"go\",\"example\\.org/socket/engineio/payload\",\"BenchmarkB64Decoder-4\",\"throughput\"\\]$"
     ]
   }
 }
@@ -213,7 +213,7 @@ Expected `benchmark-smaller.json`, passed to `customSmallerIsBetter`:
 ```json
 [
   {
-    "name": "[\"go\",\"example.org/socket/engineio/packet\",\"Decoder-4\",\"time\"]",
+    "name": "[\"go\",\"example.org/socket/engineio/packet\",\"BenchmarkDecoder-4\",\"time\"]",
     "unit": "ns/op",
     "value": 120
   }
@@ -225,14 +225,14 @@ Expected `benchmark-bigger.json`, passed to `customBiggerIsBetter`:
 ```json
 [
   {
-    "name": "[\"go\",\"example.org/socket/engineio/payload\",\"B64Decoder-4\",\"throughput\"]",
-    "unit": "MB/s",
-    "value": 125
+    "name": "[\"go\",\"example.org/socket/engineio/payload\",\"BenchmarkB64Decoder-4\",\"throughput\"]",
+    "unit": "B/s",
+    "value": 125000000
   }
 ]
 ```
 
-These are absolute head values, not the `+20.0%` and `+25.0%` deltas shown in the reports. History series names and publication behavior are covered by the [integration contract](architecture.md#history-integration).
+These are absolute head values in canonical units; the displayed `125 MB/s` exports as `125000000 B/s`. History series names and publication behavior are covered by the [integration contract](architecture.md#history-integration).
 
 ## Empty selection
 

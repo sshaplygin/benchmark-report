@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "title": "Benchmark comparison",
+  "columns": [
+    "benchmark",
+    "base",
+    "head",
+    "change",
+    "signal"
+  ],
+  "base": {
+    "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "environment": {
+      "toolchain": "go1.25.0",
+      "os": "linux",
+      "arch": "amd64",
+      "runner": "fixture runner"
+    }
+  },
+  "head": {
+    "revision": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "environment": {
+      "toolchain": "go1.25.0",
+      "os": "linux",
+      "arch": "amd64",
+      "runner": "fixture runner"
+    }
+  },
+  "sections": {
+    "metadata": true,
+    "summary": true,
+    "tables": true,
+    "benchstat": false
+  },
+  "summary": {
+    "total": 1,
+    "selected": 1,
+    "displayed": 1,
+    "omitted": 0,
+    "regression": 1,
+    "improvement": 0,
+    "below_threshold": 0,
+    "not_comparable": 0
+  },
+  "disclosures": [
+    "Signals are advisory; no statistical analysis was requested."
+  ],
+  "groups": [
+    {
+      "labels": [
+        {
+          "field": "suite",
+          "value": "example"
+        }
+      ],
+      "rows": [
+        {
+          "key": "[\"example\",\"example.org/bench\",\"BenchmarkSmall-4\",\"time\"]",
+          "identity": {
+            "suite": "example",
+            "package": "example.org/bench",
+            "benchmark": "BenchmarkSmall-4",
+            "metric": "time"
+          },
+          "base": "2.5 ns/op",
+          "head": "3 ns/op",
+          "change": "+20.0%",
+          "signal": "regression",
+          "samples": "4 / 4"
+        }
+      ]
+    }
+  ]
+}

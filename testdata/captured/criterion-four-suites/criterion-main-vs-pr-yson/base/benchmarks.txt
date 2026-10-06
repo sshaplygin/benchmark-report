@@ -1,0 +1,41 @@
+Benchmarking YSON Throughput/Serialize Binary
+Benchmarking YSON Throughput/Serialize Binary: Warming up for 3.0000 s
+
+Warning: Unable to complete 100 samples in 5.0s. You may wish to increase target time to 5.4s, enable flat sampling, or reduce sample count to 60.
+Benchmarking YSON Throughput/Serialize Binary: Collecting 100 samples in estimated 5.3650 s (5050 iterations)
+Benchmarking YSON Throughput/Serialize Binary: Analyzing
+YSON Throughput/Serialize Binary
+                        time:   [1.0562 ms 1.0573 ms 1.0590 ms]
+                        thrpt:  [1.0982 GiB/s 1.0999 GiB/s 1.1011 GiB/s]
+Found 6 outliers among 100 measurements (6.00%)
+  3 (3.00%) high mild
+  3 (3.00%) high severe
+Benchmarking YSON Throughput/Deserialize Binary
+Benchmarking YSON Throughput/Deserialize Binary: Warming up for 3.0000 s
+Benchmarking YSON Throughput/Deserialize Binary: Collecting 100 samples in estimated 5.4543 s (700 iterations)
+Benchmarking YSON Throughput/Deserialize Binary: Analyzing
+YSON Throughput/Deserialize Binary
+                        time:   [7.7795 ms 7.7859 ms 7.7936 ms]
+                        thrpt:  [152.81 MiB/s 152.96 MiB/s 153.08 MiB/s]
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking YSON Throughput/Serialize Text
+Benchmarking YSON Throughput/Serialize Text: Warming up for 3.0000 s
+Benchmarking YSON Throughput/Serialize Text: Collecting 100 samples in estimated 5.2193 s (1500 iterations)
+Benchmarking YSON Throughput/Serialize Text: Analyzing
+YSON Throughput/Serialize Text
+                        time:   [3.4881 ms 3.4947 ms 3.5014 ms]
+                        thrpt:  [244.53 MiB/s 245.00 MiB/s 245.46 MiB/s]
+Benchmarking YSON Throughput/Deserialize Text
+Benchmarking YSON Throughput/Deserialize Text: Warming up for 3.0000 s
+Benchmarking YSON Throughput/Deserialize Text: Collecting 100 samples in estimated 5.8931 s (600 iterations)
+Benchmarking YSON Throughput/Deserialize Text: Analyzing
+YSON Throughput/Deserialize Text
+                        time:   [9.7906 ms 9.8082 ms 9.8297 ms]
+                        thrpt:  [87.102 MiB/s 87.293 MiB/s 87.450 MiB/s]
+Found 7 outliers among 100 measurements (7.00%)
+  1 (1.00%) low mild
+  3 (3.00%) high mild
+  3 (3.00%) high severe
+

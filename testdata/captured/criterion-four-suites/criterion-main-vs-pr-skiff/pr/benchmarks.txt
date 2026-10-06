@@ -1,0 +1,28 @@
+Benchmarking Skiff codec throughput/encode_dynamic
+Benchmarking Skiff codec throughput/encode_dynamic: Warming up for 3.0000 s
+Benchmarking Skiff codec throughput/encode_dynamic: Collecting 20 samples in estimated 5.0478 s (1680 iterations)
+Benchmarking Skiff codec throughput/encode_dynamic: Analyzing
+Skiff codec throughput/encode_dynamic
+                        time:   [2.9811 ms 2.9893 ms 3.0002 ms]
+                        thrpt:  [3.7680 GiB/s 3.7818 GiB/s 3.7922 GiB/s]
+Found 1 outliers among 20 measurements (5.00%)
+  1 (5.00%) high severe
+Benchmarking Skiff codec throughput/decode_dynamic
+Benchmarking Skiff codec throughput/decode_dynamic: Warming up for 3.0000 s
+
+Warning: Unable to complete 20 samples in 5.0s. You may wish to increase target time to 6.6s, enable flat sampling, or reduce sample count to 10.
+Benchmarking Skiff codec throughput/decode_dynamic: Collecting 20 samples in estimated 6.5925 s (210 iterations)
+Benchmarking Skiff codec throughput/decode_dynamic: Analyzing
+Skiff codec throughput/decode_dynamic
+                        time:   [30.808 ms 30.971 ms 31.255 ms]
+                        thrpt:  [370.38 MiB/s 373.78 MiB/s 375.75 MiB/s]
+Benchmarking Skiff codec throughput/validate_and_skip
+Benchmarking Skiff codec throughput/validate_and_skip: Warming up for 3.0000 s
+Benchmarking Skiff codec throughput/validate_and_skip: Collecting 20 samples in estimated 5.6086 s (1680 iterations)
+Benchmarking Skiff codec throughput/validate_and_skip: Analyzing
+Skiff codec throughput/validate_and_skip
+                        time:   [3.3302 ms 3.3814 ms 3.4329 ms]
+                        thrpt:  [3.2931 GiB/s 3.3433 GiB/s 3.3947 GiB/s]
+Found 2 outliers among 20 measurements (10.00%)
+  2 (10.00%) high mild
+

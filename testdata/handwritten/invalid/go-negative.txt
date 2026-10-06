@@ -1,0 +1,2 @@
+pkg: example.org/a
+BenchmarkBroken-4 10 -1 ns/op

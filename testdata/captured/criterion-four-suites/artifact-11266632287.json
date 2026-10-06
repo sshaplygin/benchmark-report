@@ -1,0 +1,39 @@
+{
+  "id": 11266632287,
+  "node_id": "MDg6QXJ0aWZhY3QxMTI2NjYzMjI4Nw==",
+  "name": "criterion-main-vs-pr-client",
+  "size_in_bytes": 4728,
+  "url": "https://api.github.com/repos/sshaplygin/ytsaurus-rs/actions/artifacts/11266632287",
+  "archive_download_url": "https://api.github.com/repos/sshaplygin/ytsaurus-rs/actions/artifacts/11266632287/zip",
+  "expired": false,
+  "digest": "sha256:151aaeeeb381bb8f75c8e8d7a0c88c189cf7c0d98a0ccb2dd573823edcafa3e7",
+  "created_at": "2026-10-03T06:08:22Z",
+  "updated_at": "2026-10-03T06:08:22Z",
+  "expires_at": "2026-10-17T06:08:21Z",
+  "workflow_run": {
+    "id": 37101710472,
+    "repository_id": 1322301587,
+    "head_repository_id": 1322301587,
+    "head_branch": "docs/s4-client-rustdoc",
+    "head_sha": "c7caaa65bf2c7b9b7c3d339c06929a9046c27368"
+  },
+  "downloaded_archive_sha256": "151aaeeeb381bb8f75c8e8d7a0c88c189cf7c0d98a0ccb2dd573823edcafa3e7",
+  "members": [
+    {
+      "path": "criterion-main-vs-pr-client/base/benchmarks.txt",
+      "original_sha256": "26f1ea879cb03dcf592a952d6f0a90d5776de8b297cabc1835a6b4410d1e75bd",
+      "size_bytes": 12186,
+      "trimmed": true,
+      "stored_sha256": "8248027a5467088dc333d6d4eae249319566e97013f3b1947e4df81f8ef0dfb5",
+      "stored_size_bytes": 6418
+    },
+    {
+      "path": "criterion-main-vs-pr-client/pr/benchmarks.txt",
+      "original_sha256": "5a784107aaca1bc48d641259c65d802a8b6d764955b3fbfba48f25d498fe6b14",
+      "size_bytes": 9699,
+      "trimmed": true,
+      "stored_sha256": "96debaef6cd3bfcaf114f06c3dc3367db199e6509eab3d13f37540ce502dc3e8",
+      "stored_size_bytes": 6414
+    }
+  ]
+}

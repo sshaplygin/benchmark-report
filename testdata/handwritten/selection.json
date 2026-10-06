@@ -1,0 +1,103 @@
+{
+  "rows": [
+    {
+      "name": "a",
+      "metric": "time",
+      "base": "100",
+      "head": "120",
+      "signal": "regression",
+      "reason": "comparable"
+    },
+    {
+      "name": "b",
+      "metric": "time",
+      "base": "100",
+      "head": "105",
+      "signal": "below_threshold",
+      "reason": "comparable"
+    },
+    {
+      "name": "c",
+      "metric": "time",
+      "base": "100",
+      "head": "75",
+      "signal": "improvement",
+      "reason": "comparable"
+    },
+    {
+      "name": "d",
+      "metric": "allocations",
+      "base": "0",
+      "head": "0",
+      "signal": "below_threshold",
+      "reason": "comparable"
+    },
+    {
+      "name": "e",
+      "metric": "time",
+      "base": null,
+      "head": "1",
+      "signal": "not_comparable",
+      "reason": "added"
+    }
+  ],
+  "cases": [
+    {
+      "id": "regression-sort-limit",
+      "metrics": [
+        "time"
+      ],
+      "sort": "regression",
+      "max_rows": 2,
+      "expected_order": [
+        "a",
+        "b"
+      ],
+      "selected_before_limit": 4,
+      "omitted": 2
+    },
+    {
+      "id": "exclude-wins",
+      "include": [
+        "a",
+        "b"
+      ],
+      "exclude": [
+        "a"
+      ],
+      "expected_order": [
+        "b"
+      ]
+    },
+    {
+      "id": "hidden-unchanged",
+      "metrics": [
+        "allocations"
+      ],
+      "unchanged": "hide",
+      "expected_order": []
+    },
+    {
+      "id": "hidden-missing",
+      "metrics": [
+        "time"
+      ],
+      "missing": "hide",
+      "expected_order": [
+        "a",
+        "b",
+        "c"
+      ]
+    },
+    {
+      "id": "json-only",
+      "outputs": {
+        "markdown": null,
+        "json": "report.json"
+      },
+      "expected": "presentation JSON only"
+    }
+  ],
+  "all_cases": "Full comparison retains five rows; enabled gate remains regression failure from a.",
+  "note": "Names are shorthand IDs; include/exclude lists denote matching full canonical measurement keys, not literal regex configuration."
+}

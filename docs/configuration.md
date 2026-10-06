@@ -1,12 +1,12 @@
 # Configuration
 
-This document owns the proposed configuration contract. The first release uses JSON to allow strict decoding and schema validation without a YAML parser. The [complete example](../examples/benchmark-report.json) selects a package-oriented Markdown report and history export.
+This document owns the version 1 configuration contract; generator implementation remains planned. The first release uses JSON to allow strict decoding and schema validation without a YAML parser. The [complete example](../examples/benchmark-report.json) selects a package-oriented Markdown report and history export.
 
 ## Loading and validation
 
 Configuration has `schema_version: 1`. Unknown fields, duplicate keys, invalid enum values, invalid regular expressions, unsupported schema versions, and wrong value types are errors. Defaults apply only to absent fields. An empty string is not an absent path. `benchreport config validate` must validate without reading benchmark files or using the network.
 
-Configuration paths resolve relative to its file. The output directory is selected by CLI. Configured filenames must be relative, stay within that directory, and be unique across all enabled outputs. Reject traversal and symlink escapes when writing. Tokens, repository credentials, and executable commands are not configuration fields.
+Configuration paths resolve relative to its file. The output directory is selected by CLI. Configured filenames must be relative, stay within that directory, and be unique across all enabled outputs. The fixed reproduction paths in [Contracts](contracts.md#reproduction-layout) are reserved and cannot be configured as report or enabled history filenames. Reject traversal and symlink escapes when writing. Tokens, repository credentials, and executable commands are not configuration fields.
 
 CLI flags select input files, the output directory, and explicitly documented operational overrides. They do not silently override comparison policy. Every comparison records the effective policy; every reproduction bundle records the full effective configuration.
 

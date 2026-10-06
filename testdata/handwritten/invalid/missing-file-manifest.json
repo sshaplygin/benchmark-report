@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "revision": "7b6bba056a06a5adb46cc2e079764beca072a4d4",
+  "environment": {
+    "toolchain": "rust1.94.0",
+    "os": "linux",
+    "arch": "amd64",
+    "runner": "github-hosted:ubuntu-24.04"
+  },
+  "expected_suites": [
+    "client"
+  ],
+  "suites": [
+    {
+      "id": "client",
+      "parser": {
+        "name": "criterion",
+        "version": "1"
+      },
+      "command": "cargo bench --locked -p ytsaurus-client --bench rows -- --noplot",
+      "files": [
+        "does-not-exist.txt"
+      ]
+    }
+  ]
+}

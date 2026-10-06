@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sshaplygin.github.io/benchmark-report/schemas/input-manifest.schema.json",
+  "title": "input-manifest version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "toolchain": {
+          "type": "string",
+          "minLength": 1
+        },
+        "os": {
+          "type": "string",
+          "minLength": 1
+        },
+        "arch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runner": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "toolchain",
+        "os",
+        "arch",
+        "runner"
+      ]
+    },
+    "expected_suites": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "suites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parser": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "enum": [
+                  "go",
+                  "criterion"
+                ]
+              },
+              "version": {
+                "enum": [
+                  "1"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "version"
+            ]
+          },
+          "command": {
+            "type": "string",
+            "minLength": 1
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1,
+            "uniqueItems": true
+          }
+        },
+        "required": [
+          "id",
+          "parser",
+          "command",
+          "files"
+        ]
+      },
+      "minItems": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "revision",
+    "environment",
+    "expected_suites",
+    "suites"
+  ]
+}

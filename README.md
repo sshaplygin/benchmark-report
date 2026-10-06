@@ -75,6 +75,8 @@ Use `--parser criterion` for Criterion logs. These commands do not require GitHu
 | Document | Owns |
 | --- | --- |
 | [Architecture](docs/architecture.md) | Data contracts, CLI boundaries, comparison semantics, CI integration, and trust boundaries |
+| [Version 1 contracts](docs/contracts.md) | JSON schemas, exact value representation, identity encoding, and command specifications |
+| [Fixtures](docs/fixtures.md) | Captured log provenance and independently calculated acceptance cases |
 | [Configuration](docs/configuration.md) | User controls, defaults, validation, selection rules, and output behavior |
 | [Output examples](docs/output-examples.md) | Expected rendered results and the configuration choices that produce them |
 | [Publication](docs/publication.md) | Implemented action inputs, dependency pin, event handling, permissions, and comment migration |

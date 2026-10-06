@@ -1,0 +1,9 @@
+Benchmarking short: Warming up for 3.0000 s
+short time: [1 ns 2 ns 3 ns]
+long/group/benchmark/name
+                        time: [1 us 2 µs 3 us]
+                        change: [-30% -25% -20%] (p = 0.01 < 0.05)
+Benchmarking long/group/benchmark/name: Analyzing
+millisecond time: [1 ms 2 ms 3 ms]
+second time: [1 s 2 s 3 s]
+                        thrpt: [1 MiB/s 2 MiB/s 3 MiB/s]

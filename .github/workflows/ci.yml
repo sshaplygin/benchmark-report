@@ -1,10 +1,26 @@
-name: Action checks
+name: Checks
 on:
   push:
   pull_request:
 permissions:
   contents: read
 jobs:
+  contracts:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-14]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: '1.25.0'
+      - name: Validate contracts and examples
+        run: go test ./...
+      - name: Check Go packages
+        run: go vet ./...
   publication:
     strategy:
       matrix:

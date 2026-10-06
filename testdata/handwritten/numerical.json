@@ -1,0 +1,121 @@
+{
+  "note": "Hand-calculated expected rounded percentages; 1 decimal, thresholds 20%. Canonical decimal strings omit trailing zeros.",
+  "median": {
+    "samples": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "expected": "2.5"
+  },
+  "cases": [
+    {
+      "id": "positive-tie",
+      "base": "160",
+      "head": "170",
+      "direction": "lower",
+      "rounded_percent": "6.3",
+      "signal": "below_threshold",
+      "reason": "comparable"
+    },
+    {
+      "id": "negative-tie",
+      "base": "160",
+      "head": "150",
+      "direction": "lower",
+      "rounded_percent": "-6.3",
+      "signal": "below_threshold",
+      "reason": "comparable"
+    },
+    {
+      "id": "regression-boundary",
+      "base": "100",
+      "head": "119.95",
+      "direction": "lower",
+      "rounded_percent": "20",
+      "signal": "regression",
+      "reason": "comparable"
+    },
+    {
+      "id": "improvement-boundary",
+      "base": "100",
+      "head": "80.05",
+      "direction": "lower",
+      "rounded_percent": "-20",
+      "signal": "improvement",
+      "reason": "comparable"
+    },
+    {
+      "id": "higher-improvement",
+      "base": "100",
+      "head": "120",
+      "direction": "higher",
+      "rounded_percent": "20",
+      "signal": "improvement",
+      "reason": "comparable"
+    },
+    {
+      "id": "higher-regression",
+      "base": "100",
+      "head": "80",
+      "direction": "higher",
+      "rounded_percent": "-20",
+      "signal": "regression",
+      "reason": "comparable"
+    },
+    {
+      "id": "negative-zero",
+      "base": "10000",
+      "head": "9999",
+      "direction": "lower",
+      "rounded_percent": "0",
+      "signal": "below_threshold",
+      "reason": "comparable"
+    },
+    {
+      "id": "equal",
+      "base": "100",
+      "head": "100",
+      "direction": "lower",
+      "rounded_percent": "0",
+      "signal": "below_threshold",
+      "reason": "comparable"
+    },
+    {
+      "id": "both-zero",
+      "base": "0",
+      "head": "0",
+      "direction": "lower",
+      "rounded_percent": "0",
+      "signal": "below_threshold",
+      "reason": "comparable"
+    },
+    {
+      "id": "zero-baseline",
+      "base": "0",
+      "head": "1",
+      "direction": "lower",
+      "rounded_percent": null,
+      "signal": "not_comparable",
+      "reason": "zero_baseline"
+    },
+    {
+      "id": "to-zero",
+      "base": "100",
+      "head": "0",
+      "direction": "lower",
+      "rounded_percent": "-100",
+      "signal": "improvement",
+      "reason": "comparable"
+    }
+  ],
+  "equivalent_units": {
+    "criterion_estimates": [
+      "2 us",
+      "2000 ns"
+    ],
+    "canonical_ns": "2000",
+    "expected_percent": "0"
+  }
+}

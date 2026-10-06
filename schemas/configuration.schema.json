@@ -1,0 +1,284 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sshaplygin.github.io/benchmark-report/schemas/configuration.schema.json",
+  "title": "configuration version 1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "regression_percent": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "improvement_percent": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "percent_decimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "fail_on_regression": {
+          "type": "boolean"
+        },
+        "statistics": {
+          "enum": [
+            "none",
+            "benchstat"
+          ]
+        }
+      },
+      "required": []
+    },
+    "report": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "time",
+              "bytes",
+              "allocations",
+              "throughput"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "include": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0
+        },
+        "exclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0
+        },
+        "group_by": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "suite",
+              "package",
+              "metric"
+            ]
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "benchmark",
+              "base",
+              "head",
+              "change",
+              "signal",
+              "metric",
+              "samples"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true,
+          "contains": {
+            "enum": [
+              "benchmark"
+            ]
+          }
+        },
+        "sort": {
+          "enum": [
+            "name",
+            "regression"
+          ]
+        },
+        "unchanged": {
+          "enum": [
+            "show",
+            "hide"
+          ]
+        },
+        "missing": {
+          "enum": [
+            "show",
+            "hide"
+          ]
+        },
+        "max_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "units": {
+          "enum": [
+            "auto",
+            "canonical"
+          ]
+        },
+        "sections": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "metadata": {
+              "type": "boolean"
+            },
+            "summary": {
+              "type": "boolean"
+            },
+            "tables": {
+              "type": "boolean"
+            },
+            "benchstat": {
+              "type": "boolean"
+            }
+          },
+          "required": []
+        }
+      },
+      "required": []
+    },
+    "outputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "markdown": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "allOf": [
+                {
+                  "not": {
+                    "pattern": "^/|\\\\|^[A-Za-z]:"
+                  }
+                },
+                {
+                  "not": {
+                    "pattern": "(^|/)\\.\\.?(/|$)"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "json": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "allOf": [
+                {
+                  "not": {
+                    "pattern": "^/|\\\\|^[A-Za-z]:"
+                  }
+                },
+                {
+                  "not": {
+                    "pattern": "(^|/)\\.\\.?(/|$)"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": []
+    },
+    "history": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "time",
+              "bytes",
+              "allocations",
+              "throughput"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "include": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0
+        },
+        "exclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0
+        },
+        "smaller_file": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "not": {
+                "pattern": "^/|\\\\|^[A-Za-z]:"
+              }
+            },
+            {
+              "not": {
+                "pattern": "(^|/)\\.\\.?(/|$)"
+              }
+            }
+          ]
+        },
+        "bigger_file": {
+          "type": "string",
+          "minLength": 1,
+          "allOf": [
+            {
+              "not": {
+                "pattern": "^/|\\\\|^[A-Za-z]:"
+              }
+            },
+            {
+              "not": {
+                "pattern": "(^|/)\\.\\.?(/|$)"
+              }
+            }
+          ]
+        }
+      },
+      "required": []
+    }
+  },
+  "required": [
+    "schema_version"
+  ]
+}
