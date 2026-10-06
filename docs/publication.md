@@ -19,8 +19,10 @@ The action copies the file to a generated temporary filename before passing it u
 | Output | Meaning |
 | --- | --- |
 | `publication` | On success: `completed`, `disabled`, `fork`, `dependabot`, or `unsupported-event`. `completed` includes an unchanged comment that required no write. Outputs are not a success signal if the action fails. |
-| `previous-comment-id` | Existing ID returned by the dependency, if found |
-| `created-comment-id` | Newly created ID returned by the dependency, if created |
+| `previous-comment-id` | Existing comment’s GraphQL node ID returned by the dependency, if found |
+| `created-comment-id` | Newly created comment’s numeric REST ID returned by the dependency, if created |
+
+The dependency uses different ID formats for existing and newly created comments. Resolve them through GitHub metadata before comparing identity.
 
 ## Generated comment sizing
 
