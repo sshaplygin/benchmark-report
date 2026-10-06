@@ -22,6 +22,14 @@ The action copies the file to a generated temporary filename before passing it u
 | `previous-comment-id` | Existing ID returned by the dependency, if found |
 | `created-comment-id` | Newly created ID returned by the dependency, if created |
 
+## Generated comment sizing
+
+The generator's `render.Comment` keeps the complete Markdown and presentation artifacts separate from `comment.md`. A comment that fits is byte-identical to the complete Markdown report. Its 60,000-byte budget includes the exact dependency suffix: one newline followed by `<!-- Sticky Pull Request CommentHEADER -->`. Header validation matches the publication wrapper.
+
+An oversized report requires an absolute HTTP or HTTPS artifact URL. The shortened comment links to that complete artifact, omits the entire benchstat details section with an explicit notice when enabled, then keeps the largest fitting prefix of rows under the existing selection and sort order. Grouping is applied to the retained rows; empty groups disappear. The selected counts and classifications still cover selection before either limit. A disclosure distinguishes rows omitted by the configured row limit from additional rows omitted to fit the comment budget. No Markdown, table row, or UTF-8 sequence is cut in the middle.
+
+Titles, metadata, mandatory disclosures, and the artifact link are fixed content. If they cannot fit even with zero table rows and no benchstat details, generation fails. Section switches remain effective; disabled tables are not described as rows removed by the comment budget. The complete report and its statistical output remain intact for artifact upload. Comment generation makes no network request to verify the caller's artifact URL.
+
 ## Events and permissions
 
 Comment publication is limited to `pull_request` events from the same repository, excluding Dependabot. Forks, Dependabot, push events, and `pull_request_target` skip the comment but can still receive a summary. `publish: false` explicitly selects summary-only behavior. A read-only token on an otherwise eligible event is an error from the dependency, not a successful skip.
@@ -56,4 +64,4 @@ If retaining an existing comment ID is required, make a one-time authorized edit
 
 Run `bash tests/prepare-comment.sh` to check file validation, literal filenames, event eligibility, summary behavior, UTF-8, and comment size handling without GitHub requests. CI also exercises the composite action in summary-only mode on Linux and macOS.
 
-Live create/update behavior must be checked in an explicitly authorized trial PR before release. No live comment trial is implied by the local checks.
+Live create/update behavior must be checked in an explicitly authorized trial PR before release. No live comment trial is implied by the local checks. The inactive [trial workflow](../examples/comment-trial.yml) prepares create, update, unchanged-content, distinct-header, and insufficient-permission checks against the committed publication wrapper. Installing it and applying its opt-in label requires authorization: a successful trial creates or updates two synthetic comments on the selected PR. It performs no release or consumer rollout.

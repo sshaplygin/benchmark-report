@@ -1,0 +1,76 @@
+name: Generate benchmark report
+description: Normalize and compare completed Go or Criterion logs, render reports, and archive offline replay inputs.
+inputs:
+  parser:
+    description: Input parser, go or criterion.
+    required: true
+  base-manifest:
+    description: Path to the completed base input manifest.
+    required: true
+  head-manifest:
+    description: Path to the completed head input manifest.
+    required: true
+  config:
+    description: Optional JSON configuration path; omission uses defaults.
+    default: ''
+  output-dir:
+    description: Output directory; omission creates a unique directory in runner.temp.
+    default: ''
+  artifact-url:
+    description: Link to the complete report artifact, required when shortening a comment; defaults to the workflow run's artifact listing.
+    default: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  comment-header:
+    description: Header used by the publisher, needed to reserve its marker bytes.
+    default: benchmark-report
+  allow-environment-mismatch:
+    description: Explicitly allow and disclose different recorded environments.
+    default: 'false'
+outputs:
+  report-path:
+    description: Complete Markdown report, or empty when Markdown is disabled.
+    value: ${{ steps.generate.outputs.report-path }}
+  json-path:
+    description: Presentation JSON, or empty when JSON is disabled.
+    value: ${{ steps.generate.outputs.json-path }}
+  comparison-path:
+    description: Complete comparison JSON, including regression gate evidence.
+    value: ${{ steps.generate.outputs.comparison-path }}
+  reproduction-path:
+    description: Full reproduction manifest with inventory and checksums.
+    value: ${{ steps.generate.outputs.reproduction-path }}
+  artifact-path:
+    description: Complete bundle directory for caller-managed upload.
+    value: ${{ steps.generate.outputs.artifact-path }}
+  comment-path:
+    description: Bounded Markdown comment, or empty when Markdown is disabled.
+    value: ${{ steps.generate.outputs.comment-path }}
+  history-smaller-path:
+    description: Nonempty smaller-is-better history file, or empty when absent.
+    value: ${{ steps.generate.outputs.history-smaller-path }}
+  history-bigger-path:
+    description: Nonempty bigger-is-better history file, or empty when absent.
+    value: ${{ steps.generate.outputs.history-bigger-path }}
+  gate:
+    description: disabled, passed, or failed; a failed regression gate does not fail generation.
+    value: ${{ steps.generate.outputs.gate }}
+runs:
+  using: composite
+  steps:
+    - name: Install mapped binaries
+      id: install
+      shell: bash
+      run: bash "$GITHUB_ACTION_PATH/../scripts/install.sh"
+    - name: Generate report and reproduction bundle
+      id: generate
+      shell: bash
+      env:
+        REPORT_BINARY: ${{ steps.install.outputs.bin-dir }}/benchreport
+        REPORT_PARSER: ${{ inputs.parser }}
+        BASE_MANIFEST: ${{ inputs.base-manifest }}
+        HEAD_MANIFEST: ${{ inputs.head-manifest }}
+        REPORT_CONFIG: ${{ inputs.config }}
+        REPORT_OUTPUT_DIR: ${{ inputs.output-dir }}
+        ARTIFACT_URL: ${{ inputs.artifact-url }}
+        COMMENT_HEADER: ${{ inputs.comment-header }}
+        ALLOW_ENVIRONMENT_MISMATCH: ${{ inputs.allow-environment-mismatch }}
+      run: bash "$GITHUB_ACTION_PATH/../scripts/report.sh"

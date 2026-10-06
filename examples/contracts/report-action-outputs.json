@@ -1,0 +1,11 @@
+{
+  "report-path": "/tmp/bundle/report.md",
+  "json-path": "/tmp/bundle/report.json",
+  "comparison-path": "/tmp/bundle/comparison.json",
+  "reproduction-path": "/tmp/bundle/reproduction.json",
+  "artifact-path": "/tmp/bundle",
+  "comment-path": "/tmp/bundle/comment.md",
+  "history-smaller-path": "",
+  "history-bigger-path": "",
+  "gate": "disabled"
+}

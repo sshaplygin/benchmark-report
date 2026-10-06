@@ -8,7 +8,7 @@ import (
 )
 
 func TestExamples(t *testing.T) {
-	for _, name := range []string{"input-manifest", "normalized-run", "comparison", "presentation", "reproduction", "configuration"} {
+	for _, name := range []string{"report-result", "report-action-inputs", "report-action-outputs", "input-manifest", "normalized-run", "comparison", "presentation", "reproduction", "configuration"} {
 		t.Run(name, func(t *testing.T) {
 			data, err := os.ReadFile(filepath.Join("../../examples/contracts", name+".json"))
 			if err != nil {

@@ -35,6 +35,12 @@ jobs:
         run: bash tests/compare-cli.sh
       - name: Check rendering and offline replay
         run: bash tests/render-cli.sh
+      - name: Check full report bundles and calculation replay
+        env:
+          BENCHREPORT_TEST_BENCHSTAT: ${{ runner.temp }}/benchstat-bin/benchstat
+        run: bash tests/report-cli.sh
+      - name: Check report action input and output handling
+        run: python3 tests/report-action.py
   history:
     strategy:
       matrix:
@@ -61,6 +67,100 @@ jobs:
           persist-credentials: false
       - name: Verify upstream parsing and history appends
         run: python3 tests/history-integration.py --upstream .history-action
+  packages:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm, macos-14, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: '1.25.0'
+      - name: Build native candidate archive and dependency notices
+        run: go run ./cmd/package --output-dir "$RUNNER_TEMP/packages"
+      - name: Verify installation and reject damaged or mismatched assets
+        run: python3 tests/install.py --assets "$RUNNER_TEMP/packages"
+      - name: Select local candidate assets for composite smoke test
+        run: echo "$GITHUB_WORKSPACE/tests/installer-fixture" >> "$GITHUB_PATH"
+      - name: Run complete report action with native candidate tools
+        id: packaged-report
+        uses: ./report
+        env:
+          BENCHREPORT_FIXTURE_ASSETS: ${{ runner.temp }}/packages
+        with:
+          parser: go
+          base-manifest: testdata/captured/go-pr15/base-manifest.json
+          head-manifest: testdata/captured/go-pr15/head-manifest.json
+          config: examples/benchmark-report.json
+      - name: Verify composite output contract
+        env:
+          REPRODUCTION: ${{ steps.packaged-report.outputs.reproduction-path }}
+          COMMENT: ${{ steps.packaged-report.outputs.comment-path }}
+          GATE: ${{ steps.packaged-report.outputs.gate }}
+        run: test -s "$REPRODUCTION" && test -s "$COMMENT" && test "$GATE" = disabled
+      - name: Replay captured consumers with packaged tools
+        shell: bash
+        run: |
+          mkdir "$RUNNER_TEMP/packaged-tools"
+          for archive in "$RUNNER_TEMP"/packages/*.tar.gz; do
+            tar -xzf "$archive" -C "$RUNNER_TEMP/packaged-tools"
+          done
+          BENCHREPORT_BINARY="$RUNNER_TEMP/packaged-tools/benchreport" \
+            BENCHREPORT_TEST_BENCHSTAT="$RUNNER_TEMP/packaged-tools/benchstat" \
+            bash tests/report-cli.sh
+      - name: Retain unpushed candidate archives
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: candidate-${{ matrix.os }}
+          path: ${{ runner.temp }}/packages/*
+          if-no-files-found: error
+      - name: Prepare shared Linux bundles for cross-platform replay
+        if: matrix.os == 'ubuntu-24.04'
+        env:
+          GO_BUNDLE: ${{ steps.packaged-report.outputs.artifact-path }}
+        run: |
+          mkdir "$RUNNER_TEMP/shared-bundles"
+          cp -R "$GO_BUNDLE" "$RUNNER_TEMP/shared-bundles/go"
+          "$RUNNER_TEMP/packaged-tools/benchreport" report --parser criterion \
+            --base-manifest testdata/captured/criterion-four-suites/base-manifest.json \
+            --head-manifest testdata/captured/criterion-four-suites/head-manifest.json \
+            --output-dir "$RUNNER_TEMP/shared-bundles/criterion"
+      - name: Retain common replay inputs
+        if: matrix.os == 'ubuntu-24.04'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: shared-replay-bundles
+          path: ${{ runner.temp }}/shared-bundles
+          if-no-files-found: error
+  cross-platform-replay:
+    needs: packages
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm, macos-14, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: candidate-${{ matrix.os }}
+          path: packages
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: shared-replay-bundles
+          path: bundles
+      - name: Verify identical archived reports on this platform
+        shell: bash
+        run: |
+          mkdir tools
+          for archive in packages/*.tar.gz; do tar -xzf "$archive" -C tools; done
+          for parser in go criterion; do
+            tools/benchreport replay --reproduction "bundles/$parser/reproduction.json" --output-dir "verified/$parser"
+            cmp "bundles/$parser/report.md" "verified/$parser/report.md"
+            cmp "bundles/$parser/report.json" "verified/$parser/report.json"
+            cmp "bundles/$parser/comment.md" "verified/$parser/comment.md"
+          done
   publication:
     strategy:
       matrix:

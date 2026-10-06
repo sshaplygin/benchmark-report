@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# CI-only transport fixture; the production action still selects and verifies its asset.
+set -euo pipefail
+: "${BENCHREPORT_FIXTURE_ASSETS:?native fixture archive directory is required}"
+url= destination=
+while (( $# )); do
+  case "$1" in
+    --output) destination=$2; shift 2 ;;
+    https://github.com/sshaplygin/benchmark-report/releases/download/v*) url=$1; shift ;;
+    *) shift ;;
+  esac
+done
+[[ -n "$url" && -n "$destination" ]] || { printf 'Unexpected fixture download.\n' >&2; exit 1; }
+asset=${url##*/}
+[[ "$asset" =~ ^benchreport_[a-zA-Z0-9._-]+\.tar\.gz(\.sha256)?$ ]] || exit 1
+cp "$BENCHREPORT_FIXTURE_ASSETS/$asset" "$destination"

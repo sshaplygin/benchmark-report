@@ -19,20 +19,28 @@ type Adapter func(model.Suite, string, []byte) ([]model.Measurement, error)
 
 // LoadManifest strictly validates the embedded version 1 schema before decoding.
 func LoadManifest(path string) (model.Manifest, error) {
-	var m model.Manifest
 	data, err := os.ReadFile(path)
+	if err != nil {
+		return model.Manifest{}, fmt.Errorf("%s: %w", path, err)
+	}
+	m, err := ParseManifest(data)
 	if err != nil {
 		return m, fmt.Errorf("%s: %w", path, err)
 	}
+	return m, nil
+}
+func ParseManifest(data []byte) (model.Manifest, error) {
+	var m model.Manifest
+
 	schema, err := schemas.Read("input-manifest")
 	if err == nil {
 		err = contracts.ValidateSchema(schema, data)
 	}
 	if err != nil {
-		return m, fmt.Errorf("%s: %w", path, err)
+		return m, err
 	}
 	if err = contracts.Unmarshal(data, &m); err != nil {
-		return m, fmt.Errorf("%s: %w", path, err)
+		return m, err
 	}
 	return m, nil
 }

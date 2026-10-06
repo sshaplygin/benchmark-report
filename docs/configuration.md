@@ -79,3 +79,6 @@ History numbers must retain their exact decimal value through the upstream binar
 Use the checked-in example for Go timing tables and full benchstat details. For Criterion, set `comparison.statistics` to `none` and `report.sections.benchstat` to false. For a machine-readable-only report, set `outputs.markdown` to null. For allocation analysis, select `allocations` and `bytes` and include `metric` in grouping or columns.
 
 These are configuration changes to the same CLI. No consumer-specific renderer or configuration interpreter is required.
+
+
+Full `report` bundles reserve comparison/comment files and raw, manifest, normalized, and statistics namespaces as specified in [Contracts](contracts.md#full-report-and-calculation-replay). These operational bundle paths do not change comparison or history policy. Full report/replay require an absent or empty destination; standalone render/export retain their documented directory reuse behavior. Comment header and artifact URL are operational CLI inputs recorded for reproducibility, rather than configuration policy fields.

@@ -12,23 +12,31 @@ import (
 
 // LoadRun reads a complete normalized run without requiring archived raw files.
 func LoadRun(path string) (model.Run, error) {
-	var run model.Run
 	data, err := os.ReadFile(path)
+	if err != nil {
+		return model.Run{}, fmt.Errorf("%s: %w", path, err)
+	}
+	run, err := ParseRun(data)
 	if err != nil {
 		return run, fmt.Errorf("%s: %w", path, err)
 	}
+	return run, nil
+}
+func ParseRun(data []byte) (model.Run, error) {
+	var run model.Run
+
 	schema, err := schemas.Read("normalized-run")
 	if err == nil {
 		err = contracts.ValidateSchema(schema, data)
 	}
 	if err != nil {
-		return run, fmt.Errorf("%s: %w", path, err)
+		return run, err
 	}
 	if err = contracts.Unmarshal(data, &run); err != nil {
-		return run, fmt.Errorf("%s: %w", path, err)
+		return run, err
 	}
 	if err = ValidateRun(run); err != nil {
-		return run, fmt.Errorf("%s: %w", path, err)
+		return run, err
 	}
 	return run, nil
 }

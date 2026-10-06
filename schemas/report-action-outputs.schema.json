@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "title": "Report action outputs",
+  "properties": {
+    "report-path": {
+      "type": "string"
+    },
+    "json-path": {
+      "type": "string"
+    },
+    "comparison-path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reproduction-path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact-path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "comment-path": {
+      "type": "string"
+    },
+    "history-smaller-path": {
+      "type": "string"
+    },
+    "history-bigger-path": {
+      "type": "string"
+    },
+    "gate": {
+      "enum": [
+        "disabled",
+        "passed",
+        "failed"
+      ]
+    }
+  },
+  "required": [
+    "report-path",
+    "json-path",
+    "comparison-path",
+    "reproduction-path",
+    "artifact-path",
+    "comment-path",
+    "history-smaller-path",
+    "history-bigger-path",
+    "gate"
+  ]
+}

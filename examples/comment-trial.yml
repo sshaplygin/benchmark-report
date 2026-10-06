@@ -1,0 +1,73 @@
+# Inactive template. Install and add the opt-in label only after user authorization.
+# Uses the reviewed, already committed publication wrapper; no PR code is executed.
+name: Authorized publication trial
+on:
+  pull_request:
+    types: [labeled, synchronize, reopened]
+permissions:
+  contents: read
+concurrency:
+  group: benchmark-report-publication-trial-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+jobs:
+  create-update:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]' && contains(github.event.pull_request.labels.*.name, 'benchmark-report-live-trial')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - run: printf 'Benchmark Report publication trial — initial.\n' > trial.md
+      - id: first
+        uses: sshaplygin/benchmark-report@50f193333540d8320ad4a81459da8fe5fc8df600
+        with:
+          report-path: trial.md
+          header: benchmark-report-trial-main
+          summary: 'false'
+      - run: printf 'Benchmark Report publication trial — updated.\n' > trial.md
+      - id: updated
+        uses: sshaplygin/benchmark-report@50f193333540d8320ad4a81459da8fe5fc8df600
+        with:
+          report-path: trial.md
+          header: benchmark-report-trial-main
+          summary: 'false'
+      - id: unchanged
+        uses: sshaplygin/benchmark-report@50f193333540d8320ad4a81459da8fe5fc8df600
+        with:
+          report-path: trial.md
+          header: benchmark-report-trial-main
+          summary: 'false'
+      - id: separate
+        uses: sshaplygin/benchmark-report@50f193333540d8320ad4a81459da8fe5fc8df600
+        with:
+          report-path: trial.md
+          header: benchmark-report-trial-separate
+          summary: 'false'
+      - name: Check stable identity and separate headers
+        env:
+          FIRST: ${{ steps.first.outputs.created-comment-id || steps.first.outputs.previous-comment-id }}
+          UPDATED: ${{ steps.updated.outputs.previous-comment-id }}
+          UNCHANGED: ${{ steps.unchanged.outputs.previous-comment-id }}
+          SEPARATE: ${{ steps.separate.outputs.created-comment-id || steps.separate.outputs.previous-comment-id }}
+        run: |
+          test -n "$FIRST" && test "$FIRST" = "$UPDATED" && test "$FIRST" = "$UNCHANGED"
+          test -n "$SEPARATE" && test "$FIRST" != "$SEPARATE"
+  insufficient-permission:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]' && contains(github.event.pull_request.labels.*.name, 'benchmark-report-live-trial')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - run: printf 'This read-only publication attempt must fail.\n' > trial.md
+      - id: denied
+        continue-on-error: true
+        uses: sshaplygin/benchmark-report@50f193333540d8320ad4a81459da8fe5fc8df600
+        with:
+          report-path: trial.md
+          header: benchmark-report-trial-denied-${{ github.run_id }}
+          summary: 'false'
+      - name: Require a permission failure
+        env:
+          OUTCOME: ${{ steps.denied.outcome }}
+        run: test "$OUTCOME" = failure
