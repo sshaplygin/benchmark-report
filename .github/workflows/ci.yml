@@ -33,6 +33,8 @@ jobs:
         env:
           BENCHREPORT_TEST_BENCHSTAT: ${{ runner.temp }}/benchstat-bin/benchstat
         run: bash tests/compare-cli.sh
+      - name: Check rendering and offline replay
+        run: bash tests/render-cli.sh
   publication:
     strategy:
       matrix:

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/sshaplygin/benchmark-report/internal/config"
 	"github.com/sshaplygin/benchmark-report/internal/decimal"
-	"github.com/sshaplygin/benchmark-report/internal/input"
+
 	"github.com/sshaplygin/benchmark-report/internal/model"
 	"math/big"
 	"sort"
@@ -21,7 +21,7 @@ func Runs(base, head model.Run, policy model.Policy, allowEnvironmentMismatch bo
 		name string
 		run  model.Run
 	}{{"base", base}, {"head", head}} {
-		if err := input.ValidateRun(side.run); err != nil {
+		if err := model.ValidateRun(side.run); err != nil {
 			return result, fmt.Errorf("%s normalized run: %w", side.name, err)
 		}
 	}
@@ -65,49 +65,13 @@ func Runs(base, head model.Run, policy model.Policy, allowEnvironmentMismatch bo
 	sort.Strings(ordered)
 	hasRegression := false
 	for _, key := range ordered {
-		left, right := bases[key], heads[key]
-		source := left
-		if source == nil {
-			source = right
+
+		row, err := Row(bases[key], heads[key], policy)
+		if err != nil {
+			return model.Comparison{}, err
 		}
-		row := model.ComparisonRow{Key: key, Identity: source.Identity, Definition: source.Definition, Base: left, Head: right, Signal: "not_comparable"}
-		switch {
-		case left == nil:
-			row.Reason = "added"
-		case right == nil:
-			row.Reason = "removed"
-		default:
-			if left.Definition != right.Definition {
-				return model.Comparison{}, fmt.Errorf("measurement %s: incompatible unit, direction, or estimator", key)
-			}
-			baseline, err := decimal.Parse(left.Estimate)
-			if err != nil {
-				return model.Comparison{}, err
-			}
-			current, err := decimal.Parse(right.Estimate)
-			if err != nil {
-				return model.Comparison{}, err
-			}
-			if baseline.Sign() == 0 && current.Sign() != 0 {
-				row.Reason = "zero_baseline"
-			} else {
-				row.Reason = "comparable"
-				percentage := new(big.Rat)
-				if baseline.Sign() != 0 {
-					percentage.Quo(current, baseline)
-					percentage.Sub(percentage, big.NewRat(1, 1))
-					percentage.Mul(percentage, big.NewRat(100, 1))
-				}
-				rounded, err := decimal.RoundSigned(percentage, policy.PercentDecimals)
-				if err != nil {
-					return model.Comparison{}, fmt.Errorf("measurement %s: %w", key, err)
-				}
-				row.DeltaPercent = &rounded
-				row.Signal = classify(rounded, source.Definition.Direction, policy)
-				if row.Signal == "regression" {
-					hasRegression = true
-				}
-			}
+		if row.Signal == "regression" {
+			hasRegression = true
 		}
 		result.Rows = append(result.Rows, row)
 	}
@@ -133,4 +97,54 @@ func classify(rounded, direction string, policy model.Policy) string {
 		return "improvement"
 	}
 	return "below_threshold"
+}
+
+// Row computes one identity join without consulting presentation settings.
+func Row(left, right *model.Measurement, policy model.Policy) (model.ComparisonRow, error) {
+	if left == nil && right == nil {
+		return model.ComparisonRow{}, fmt.Errorf("measurement has no sides")
+	}
+
+	source := left
+	if source == nil {
+		source = right
+	}
+	row := model.ComparisonRow{Key: source.Key, Identity: source.Identity, Definition: source.Definition, Base: left, Head: right, Signal: "not_comparable"}
+	switch {
+	case left == nil:
+		row.Reason = "added"
+	case right == nil:
+		row.Reason = "removed"
+	default:
+		if left.Definition != right.Definition {
+			return model.ComparisonRow{}, fmt.Errorf("measurement %s: incompatible unit, direction, or estimator", source.Key)
+		}
+		baseline, err := decimal.Parse(left.Estimate)
+		if err != nil {
+			return model.ComparisonRow{}, err
+		}
+		current, err := decimal.Parse(right.Estimate)
+		if err != nil {
+			return model.ComparisonRow{}, err
+		}
+		if baseline.Sign() == 0 && current.Sign() != 0 {
+			row.Reason = "zero_baseline"
+		} else {
+			row.Reason = "comparable"
+			percentage := new(big.Rat)
+			if baseline.Sign() != 0 {
+				percentage.Quo(current, baseline)
+				percentage.Sub(percentage, big.NewRat(1, 1))
+				percentage.Mul(percentage, big.NewRat(100, 1))
+			}
+			rounded, err := decimal.RoundSigned(percentage, policy.PercentDecimals)
+			if err != nil {
+				return model.ComparisonRow{}, fmt.Errorf("measurement %s: %w", source.Key, err)
+			}
+			row.DeltaPercent = &rounded
+			row.Signal = classify(rounded, source.Definition.Direction, policy)
+
+		}
+	}
+	return row, nil
 }

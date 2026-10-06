@@ -1,6 +1,6 @@
 # Architecture
 
-This document specifies the first release. Version 1 schemas and serialization rules are defined in [Contracts](contracts.md); normalization, comparison, and configuration validation are implemented, while rendering and history export remain pending the stages in the [implementation plan](implementation-plan.md).
+This document specifies the first release. Version 1 schemas and serialization rules are defined in [Contracts](contracts.md); normalization, comparison, configuration validation, rendering, and verified presentation replay are implemented. History export remains pending the stages in the [implementation plan](implementation-plan.md).
 
 ## Boundaries
 
@@ -93,6 +93,6 @@ The external format is specified in [github-action-benchmark's documentation](ht
 
 ## Reproduction artifacts
 
-The planned report-action orchestration archives raw inputs, manifests, effective configuration, normalized runs, comparison JSON, complete rendered reports, benchstat output when enabled, and checksums. Standalone `render` produces a presentation replay bundle from its comparison and effective configuration; it does not claim to verify normalization. Fixed bundle paths and reserved names are defined in [Contracts](contracts.md#reproduction-layout). Rewrite archived file references to bundle-relative paths and reject references outside the bundle during replay. A replay command sequence in each artifact starts at rendering when only presentation is being reproduced and at normalization when calculation is being verified. Offline replay requires the matching platform release archive to be installed beforehand; no command downloads missing tools implicitly.
+The planned report-action orchestration archives raw inputs, manifests, effective configuration, normalized runs, comparison JSON, complete rendered reports, benchstat output when enabled, and checksums. Standalone `render` produces a presentation replay bundle from its comparison and effective configuration; it does not claim to verify normalization. Standalone replay uses `render --reproduction FILE` to verify complete inventories and checksums before reading dependent inputs; it never executes recorded command strings. Fixed bundle paths and reserved names are defined in [Contracts](contracts.md#reproduction-layout). Rewrite archived file references to bundle-relative paths and reject references outside the bundle during replay. A replay command sequence in each artifact starts at rendering when only presentation is being reproduced and at normalization when calculation is being verified. Offline replay requires the matching platform release archive to be installed beforehand; no command downloads missing tools implicitly.
 
 Record benchstat input ordering and suite boundaries. Missing archived dependencies produce an explicit error. No step silently fetches a baseline, infers a different revision, or replaces a recorded tool version with the latest release.

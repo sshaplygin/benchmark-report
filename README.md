@@ -1,6 +1,6 @@
 # Benchmark Report
 
-Benchmark Report provides a composite GitHub Action that publishes a prepared Markdown report through `sticky-pull-request-comment`. The Go CLI normalizes and compares Go benchmark text and Rust Criterion logs. Configurable rendering and local report reproduction remain planned; no CLI release is available yet.
+Benchmark Report provides a composite GitHub Action that publishes a prepared Markdown report through `sticky-pull-request-comment`. The Go CLI normalizes and compares Go benchmark text and Rust Criterion logs, renders configurable Markdown/JSON, and verifies offline replay bundles. No CLI release is available yet.
 
 See [output examples](docs/output-examples.md) for Go and Criterion reports, a compact report, allocation and throughput tables, and history JSON.
 
@@ -83,13 +83,24 @@ The default comparison needs no statistical tool or raw logs after normalization
 
 An enabled regression gate returns exit code 2 after writing the complete comparison. Report filters do not change that decision. Environment differences fail unless explicitly allowed with `--allow-environment-mismatch`; an allowed difference is recorded in the comparison.
 
-## Planned rendering and history export
-
-These remaining commands will consume the saved comparison and normalized run:
+## Render and reproduce a report
 
 ```sh
-benchreport render --input comparison.json \
-  --config benchmark-report.json --output-dir out
+./bin/benchreport render --input out/comparison.json --output-dir out/report
+./bin/benchreport render --input out/report/replay-inputs/comparison.json \
+  --config out/report/replay-inputs/configuration.json \
+  --reproduction out/report/reproduction.json --output-dir out/replayed
+```
+
+The first command writes the enabled reports, effective configuration, comparison snapshot, and `reproduction.json`. The second verifies the bundle and regenerates the same report bytes. Input paths and checksums are checked before replay; neither command needs GitHub credentials or a network connection.
+
+Use `--config FILE` to select metrics, columns, grouping, filters, sections, and output filenames. See [configuration](docs/configuration.md) for the complete contract. A standalone render bundle reproduces presentation from its saved comparison. A full bundle for repeating normalization and calculation will be added with the generator action.
+
+## Planned history export
+
+History export will consume a normalized run:
+
+```sh
 benchreport export --input head.json \
   --config benchmark-report.json --output-dir out
 ```
