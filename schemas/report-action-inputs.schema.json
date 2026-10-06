@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "title": "Report action inputs",
+  "properties": {
+    "parser": {
+      "enum": [
+        "go",
+        "criterion"
+      ]
+    },
+    "base-manifest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "head-manifest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "config": {
+      "type": "string",
+      "default": ""
+    },
+    "output-dir": {
+      "type": "string",
+      "default": ""
+    },
+    "artifact-url": {
+      "type": "string"
+    },
+    "comment-header": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._:-]{1,100}$",
+      "default": "benchmark-report"
+    },
+    "allow-environment-mismatch": {
+      "enum": [
+        "true",
+        "false"
+      ],
+      "default": "false"
+    }
+  },
+  "required": [
+    "parser",
+    "base-manifest",
+    "head-manifest"
+  ]
+}

@@ -21,7 +21,7 @@ outputs:
     description: completed, disabled, fork, dependabot, or unsupported-event; completed also includes an unchanged comment.
     value: ${{ steps.prepare.outputs.publication }}
   previous-comment-id:
-    description: Existing comment ID returned by sticky-pull-request-comment.
+    description: Existing comment GraphQL node ID returned by sticky-pull-request-comment.
     value: ${{ steps.sticky.outputs.previous_comment_id }}
   created-comment-id:
     description: New comment ID returned by sticky-pull-request-comment.

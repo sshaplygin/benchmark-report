@@ -1,0 +1,94 @@
+# Copy into the consumer's .github/workflows/ after the first binary release.
+# Replace both REPLACE_WITH_REVIEWED_COMMIT_SHA references, the Go version,
+# benchmark command, and the base repository's reporting configuration.
+name: Benchmark pull request
+on:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: benchmark-report-${{ github.event.pull_request.number }}-benchmark-report-go
+  cancel-in-progress: true
+jobs:
+  measure:
+    runs-on: ubuntu-24.04
+    env:
+      GOTOOLCHAIN: local
+    outputs:
+      gate: ${{ steps.report.outputs.gate }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: head
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: '1.25.0'
+      - name: Measure both revisions on this runner
+        run: |
+          for side in base head; do
+            (cd "$side" && go test -mod=readonly -run '^$' -bench . -benchmem -count=10 ./...) > "$RUNNER_TEMP/$side.txt"
+          done
+      - name: Record input manifests
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          for side in base head; do
+            revision=$BASE_SHA
+            if [[ "$side" == head ]]; then revision=$HEAD_SHA; fi
+            jq -n --arg revision "$revision" --arg file "$RUNNER_TEMP/$side.txt" \
+              '{schema_version:1,revision:$revision,
+                environment:{toolchain:"go1.25.0",os:"linux",arch:"amd64",runner:"github-hosted:ubuntu-24.04"},
+                expected_suites:["go"],suites:[{id:"go",parser:{name:"go",version:"1"},
+                command:"go test -mod=readonly -run '\''^$'\'' -bench . -benchmem -count=10 ./...",files:[$file]}]}' \
+              > "$RUNNER_TEMP/$side.json"
+          done
+      - name: Generate full report and bounded comment
+        id: report
+        uses: sshaplygin/benchmark-report/report@REPLACE_WITH_REVIEWED_COMMIT_SHA
+        with:
+          parser: go
+          base-manifest: ${{ runner.temp }}/base.json
+          head-manifest: ${{ runner.temp }}/head.json
+          config: base/.github/benchmark-report.json
+          comment-header: benchmark-report-go
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: benchmark-report-${{ github.run_id }}
+          path: ${{ steps.report.outputs.artifact-path }}
+          if-no-files-found: error
+  publish:
+    needs: measure
+    if: ${{ !cancelled() && needs.measure.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      # No PR checkout, benchmark command, or downloaded executable runs here.
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: benchmark-report-${{ github.run_id }}
+          path: bundle
+      - name: Append the complete job summary
+        uses: sshaplygin/benchmark-report@REPLACE_WITH_REVIEWED_COMMIT_SHA
+        with:
+          report-path: bundle/report.md
+          header: benchmark-report-go
+          publish: 'false'
+      - name: Publish the bounded PR comment when eligible
+        uses: sshaplygin/benchmark-report@REPLACE_WITH_REVIEWED_COMMIT_SHA
+        with:
+          report-path: bundle/comment.md
+          header: benchmark-report-go
+          summary: 'false'
+      - name: Apply the regression gate after publication
+        if: needs.measure.outputs.gate == 'failed'
+        run: exit 1

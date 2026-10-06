@@ -1,6 +1,6 @@
 # Architecture
 
-This document specifies the first release. Version 1 schemas and serialization rules are defined in [Contracts](contracts.md); normalization, comparison, configuration validation, rendering, and verified presentation replay are implemented. History export is also implemented; action packaging and full calculation bundles remain pending the [implementation plan](implementation-plan.md).
+This document specifies the first release. Version 1 schemas and serialization rules are defined in [Contracts](contracts.md); normalization, comparison, configuration validation, rendering, and verified presentation replay are implemented. History export, offline report orchestration, and full calculation replay are implemented. Release acceptance follows the [implementation plan](implementation-plan.md).
 
 ## Boundaries
 
@@ -20,7 +20,7 @@ The PoC needs only the two adapters specified under [Normalization](#normalizati
 
 ## Data contracts
 
-All JSON documents carry `schema_version: 1`, except the external action's array format. Readers reject unsupported versions and duplicate object keys. Input validation reports the file and field or line involved. Schemas and valid and invalid fixtures are stage 1 deliverables.
+All JSON documents carry `schema_version: 1`, except history arrays and native GitHub action input/output string maps (versioned by the pinned action commit). Readers reject unsupported versions and duplicate object keys. Input validation reports the file and field or line involved. Schemas and valid and invalid fixtures are stage 1 deliverables.
 
 | Document | Required information |
 | --- | --- |
@@ -71,7 +71,7 @@ Output ordering and numeric formatting are deterministic. Do not insert a curren
 
 ## GitHub integration
 
-Keep computation and publication in separate jobs. The planned `report` entry point orchestrates normalization, comparison, rendering, and reproduction artifacts from downloaded input manifests. It returns paths for the report, comparison, reproduction manifest, and any requested history export, plus a regression status. The root publication action owns optional job-summary output so callers do not append the same report twice.
+Keep computation and publication in separate jobs. The `report` entry point orchestrates normalization, comparison, rendering, and reproduction artifacts from downloaded input manifests. It returns paths for the report, comparison, reproduction manifest, and any requested history export, plus a regression status. The root publication action owns optional job-summary output so callers do not append the same report twice.
 
 The root action consumes a completed report and invokes a pinned sticky-pull-request-comment. The dependency owns comment lookup, pagination, author matching, and create/update requests. Do not add a parallel API client, custom retry layer, or comment discovery implementation. The implemented input contract and legacy-marker migration are defined in [Publication](publication.md).
 
@@ -79,7 +79,7 @@ Serialize the complete benchmark workflow per PR and report header with cancella
 
 Benchmark execution jobs use read-only repository permissions and no publication secrets. The default fork behavior is summary plus artifacts. A privileged publisher must never execute PR-supplied binaries, actions, scripts, or configuration hooks. Cross-workflow publication for forks is outside the first release.
 
-Report rendering must escape benchmark names, revision labels, and metadata for the selected context. No user-supplied value becomes shell code. Configuration cannot read environment secrets or invoke commands. The publication action rejects oversized comments rather than modifying supplied Markdown. Stage 6 will add a shortened comment with deterministic row truncation, an omitted-row count, and a link to the complete artifact when needed. Its comment budget must include the upstream marker defined in Publication. Fail if the fixed content alone exceeds that budget.
+Report rendering must escape benchmark names, revision labels, and metadata for the selected context. No user-supplied value becomes shell code. Configuration cannot read environment secrets or invoke commands. The publication action rejects oversized comments rather than modifying supplied Markdown. Report orchestration adds a shortened comment with deterministic row truncation, an omitted-row count, and a link to the complete artifact when needed. Its comment budget must include the upstream marker defined in Publication. Fail if the fixed content alone exceeds that budget.
 
 ## History integration
 
@@ -93,6 +93,6 @@ The external format is specified in [github-action-benchmark's documentation](ht
 
 ## Reproduction artifacts
 
-The planned report-action orchestration archives raw inputs, manifests, effective configuration, normalized runs, comparison JSON, complete rendered reports, benchstat output when enabled, and checksums. Standalone `render` produces a presentation replay bundle from its comparison and effective configuration; it does not claim to verify normalization. Standalone replay uses `render --reproduction FILE` to verify complete inventories and checksums before reading dependent inputs; it never executes recorded command strings. Fixed bundle paths and reserved names are defined in [Contracts](contracts.md#reproduction-layout). Rewrite archived file references to bundle-relative paths and reject references outside the bundle during replay. A replay command sequence in each artifact starts at rendering when only presentation is being reproduced and at normalization when calculation is being verified. Offline replay requires the matching platform release archive to be installed beforehand; no command downloads missing tools implicitly.
+The report orchestration archives raw inputs, manifests, effective configuration, normalized runs, comparison JSON, complete rendered reports, benchstat output when enabled, and checksums. Standalone `render` produces a presentation replay bundle from its comparison and effective configuration; it does not claim to verify normalization. Standalone replay uses `render --reproduction FILE` to verify complete inventories and checksums before reading dependent inputs; it never executes recorded command strings. Fixed bundle paths and reserved names are defined in [Contracts](contracts.md#reproduction-layout). Rewrite archived file references to bundle-relative paths and reject references outside the bundle during replay. `replay --reproduction FILE --output-dir DIR` verifies a full inventory, reruns normalization and comparison, and proves calculation and presentation equality. Full report/replay destinations must be absent or empty; no unlisted stale files are retained or arbitrary files deleted. Offline replay requires the matching platform release archive to be installed beforehand; no command downloads missing tools implicitly.
 
 Record benchstat input ordering and suite boundaries. Missing archived dependencies produce an explicit error. No step silently fetches a baseline, infers a different revision, or replaces a recorded tool version with the latest release.

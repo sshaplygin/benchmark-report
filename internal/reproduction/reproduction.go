@@ -97,7 +97,7 @@ func validate(path, inputPath, configPath, version string, snapshots map[string]
 	if manifest.Generator.Name != "benchreport" || manifest.Generator.Version != version {
 		return manifest, nil, fmt.Errorf("reproduction: requires benchreport %s, installed %s", manifest.Generator.Version, version)
 	}
-	if len(manifest.Replay.Verify) != 0 || manifest.Statistics != nil {
+	if manifest.Report == nil && (len(manifest.Replay.Verify) != 0 || manifest.Statistics != nil) {
 		return manifest, nil, fmt.Errorf("reproduction: full calculation replay is not supported by standalone render")
 	}
 	absolute, err := filepath.Abs(path)
@@ -162,6 +162,7 @@ func validate(path, inputPath, configPath, version string, snapshots map[string]
 			return manifest, nil, fmt.Errorf("reproduction: inventory path escapes bundle")
 		}
 		protected = append(protected, physical)
+		snapshots[file.Path] = bytes
 		snapshots[file.Role] = bytes
 		switch file.Role {
 		case "comparison":
@@ -207,6 +208,12 @@ func validate(path, inputPath, configPath, version string, snapshots map[string]
 	}
 	if !config.PolicyEqual(c.Policy, cfg.Comparison) {
 		return manifest, nil, fmt.Errorf("reproduction: configuration policy disagrees with comparison")
+	}
+	if manifest.Report != nil {
+		if err := checkFull(manifest, c, cfg, snapshots); err != nil {
+			return manifest, nil, err
+		}
+		return manifest, protected, nil
 	}
 	expected := map[string]string{ComparisonName: "comparison", ConfigurationName: "configuration"}
 	if cfg.Outputs.Markdown != nil {

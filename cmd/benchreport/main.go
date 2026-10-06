@@ -13,6 +13,7 @@ import (
 	"github.com/sshaplygin/benchmark-report/internal/input"
 	"github.com/sshaplygin/benchmark-report/internal/model"
 	"github.com/sshaplygin/benchmark-report/internal/output"
+	"github.com/sshaplygin/benchmark-report/internal/pipeline"
 	"github.com/sshaplygin/benchmark-report/internal/render"
 	"github.com/sshaplygin/benchmark-report/internal/reproduction"
 	"github.com/sshaplygin/benchmark-report/internal/statistics"
@@ -30,6 +31,8 @@ Usage:
   benchreport compare --base FILE --head FILE [--config FILE] --out FILE [--allow-environment-mismatch] [--benchstat-path FILE]
   benchreport render --input FILE [--config FILE] --output-dir DIR [--reproduction FILE]
   benchreport export --input FILE [--config FILE] --output-dir DIR
+  benchreport report --parser go|criterion --base-manifest FILE --head-manifest FILE [--config FILE] --output-dir DIR [--allow-environment-mismatch] [--benchstat-path FILE] [--artifact-url URL] [--comment-header HEADER]
+  benchreport replay --reproduction FILE --output-dir DIR [--benchstat-path FILE]
   benchreport config validate --config FILE
   benchreport --version
   benchreport --help
@@ -51,6 +54,13 @@ func run(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stdout, "benchreport %s\n", version)
 			return 0
 		}
+	}
+	if len(args) == 2 && args[1] == "--version" {
+		fmt.Fprintf(stdout, "benchreport %s\n", version)
+		return 0
+	}
+	if args[0] == "report" || args[0] == "replay" {
+		return runPipeline(args[0], args[1:], stdout, stderr)
 	}
 	if args[0] == "export" {
 		return runExport(args[1:], stdout, stderr)
@@ -435,6 +445,55 @@ func runExport(args []string, stdout, stderr io.Writer) int {
 	}
 	if files.Bigger != nil {
 		result.Files["bigger"] = filepath.Join(absolute, filepath.FromSlash(cfg.History.BiggerFile))
+	}
+	if err = json.NewEncoder(stdout).Encode(result); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	return 0
+}
+
+func runPipeline(command string, args []string, stdout, stderr io.Writer) int {
+	flags := flag.NewFlagSet(command, flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	flags.Usage = func() { fmt.Fprint(stdout, help) }
+	directory := flags.String("output-dir", "", "empty full-bundle directory")
+	tool := flags.String("benchstat-path", "", "pinned benchstat executable")
+	var opts pipeline.Options
+	opts.Version = version
+	var manifest *string
+	if command == "report" {
+		flags.StringVar(&opts.Parser, "parser", "", "go or criterion")
+		flags.StringVar(&opts.BaseManifest, "base-manifest", "", "base input manifest")
+		flags.StringVar(&opts.HeadManifest, "head-manifest", "", "head input manifest")
+		flags.StringVar(&opts.ConfigPath, "config", "", "configuration")
+		flags.StringVar(&opts.ArtifactURL, "artifact-url", "", "full artifact URL for shortened comments")
+		flags.StringVar(&opts.CommentHeader, "comment-header", "benchmark-report", "sticky comment header")
+		flags.BoolVar(&opts.AllowEnvironmentMismatch, "allow-environment-mismatch", false, "disclose environment mismatch")
+	} else {
+		manifest = flags.String("reproduction", "", "full calculation bundle manifest")
+	}
+	if err := flags.Parse(args); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
+		return 1
+	}
+	if flags.NArg() != 0 || *directory == "" || (command == "report" && (opts.Parser == "" || opts.BaseManifest == "" || opts.HeadManifest == "")) || (command == "replay" && *manifest == "") {
+		fmt.Fprintln(stderr, "missing required pipeline flags or unexpected positional arguments")
+		return 1
+	}
+	opts.BenchstatPath = *tool
+	var result pipeline.Result
+	var err error
+	if command == "report" {
+		result, err = pipeline.Run(opts, *directory)
+	} else {
+		result, err = pipeline.Replay(*manifest, *directory, *tool, version)
+	}
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
 	}
 	if err = json.NewEncoder(stdout).Encode(result); err != nil {
 		fmt.Fprintln(stderr, err)

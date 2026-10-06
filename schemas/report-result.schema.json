@@ -1,0 +1,16 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$id":"https://sshaplygin.github.io/benchmark-report/schemas/report-result.schema.json",
+ "title":"report and replay result version 1",
+ "type":"object","additionalProperties":false,
+ "required":["schema_version","files","gate"],
+ "properties":{
+  "schema_version":{"const":1},
+  "gate":{"enum":["disabled","passed","failed"]},
+  "files":{"type":"object","additionalProperties":false,"required":["comparison","reproduction"],"properties":{
+   "comparison":{"$ref":"#/$defs/path"},"reproduction":{"$ref":"#/$defs/path"},
+   "markdown":{"$ref":"#/$defs/path"},"presentation":{"$ref":"#/$defs/path"},
+   "comment":{"$ref":"#/$defs/path"},"history_smaller":{"$ref":"#/$defs/path"},"history_bigger":{"$ref":"#/$defs/path"}
+  }}
+ },"$defs":{"path":{"type":"string","pattern":"^/","minLength":2}}
+}

@@ -1,6 +1,6 @@
 # Benchmark Report
 
-Benchmark Report provides a composite GitHub Action that publishes a prepared Markdown report through `sticky-pull-request-comment`. The Go CLI normalizes and compares Go benchmark text and Rust Criterion logs, renders configurable Markdown/JSON, verifies offline replay bundles, and exports absolute measurements for benchmark history. No CLI release is available yet.
+Benchmark Report provides a composite GitHub Action that publishes a prepared Markdown report through `sticky-pull-request-comment`. The Go CLI normalizes and compares Go benchmark text and Rust Criterion logs, renders configurable Markdown/JSON, verifies offline replay bundles, and exports absolute measurements for benchmark history. The generator action is implemented; its first binary release is not available yet.
 
 See [output examples](docs/output-examples.md) for Go and Criterion reports, a compact report, allocation and throughput tables, and history JSON.
 
@@ -34,7 +34,7 @@ flowchart LR
     F --> G[History on GitHub Pages]
 ```
 
-On a pull request, the consumer workflow runs both revisions with one toolchain on the same runner for each suite. The planned generator creates the report; the existing composite action writes the summary and delegates comment updates. Fork PRs receive a job summary, with artifacts uploaded by the caller.
+On a pull request, the consumer workflow runs both revisions with one toolchain on the same runner for each suite. The Go generator creates the report; the existing composite action writes the summary and delegates comment updates. Fork PRs receive a job summary, with artifacts uploaded by the caller.
 
 On a push to the primary branch, the workflow measures the accepted commit and exports absolute measurements to `github-action-benchmark`. That action owns historical storage and charts. Its comments, summaries, and failure alerts are disabled in this integration so that report policy has one owner. History publication is optional.
 
@@ -94,7 +94,18 @@ An enabled regression gate returns exit code 2 after writing the complete compar
 
 The first command writes the enabled reports, effective configuration, comparison snapshot, and `reproduction.json`. The second verifies the bundle and regenerates the same report bytes. Input paths and checksums are checked before replay; neither command needs GitHub credentials or a network connection.
 
-Use `--config FILE` to select metrics, columns, grouping, filters, sections, and output filenames. See [configuration](docs/configuration.md) for the complete contract. A standalone render bundle reproduces presentation from its saved comparison. A full bundle for repeating normalization and calculation will be added with the generator action.
+Use `--config FILE` to select metrics, columns, grouping, filters, sections, and output filenames. See [configuration](docs/configuration.md) for the complete contract. A standalone render bundle reproduces presentation from its saved comparison. Use `report` below to retain the inputs needed to verify normalization and calculation too.
+
+## Generate and verify a full bundle
+
+```sh
+./bin/benchreport report --parser go \
+  --base-manifest testdata/captured/go-pr15/base-manifest.json \
+  --head-manifest testdata/captured/go-pr15/head-manifest.json --output-dir out/bundle
+./bin/benchreport replay --reproduction out/bundle/reproduction.json --output-dir out/verified
+```
+
+The full bundle includes raw logs, rebased manifests, normalized runs, configuration, calculations, and rendered reports. Replay verifies its inventory before repeating normalization and comparison offline. Both commands require a fresh output directory. For CI inputs, outputs, installation, and publication order, see the [generator action](docs/report-action.md) and [PR workflow example](examples/pull-request.yml).
 
 ## Export benchmark history
 
@@ -118,6 +129,7 @@ Reproducing a saved report does not promise identical timings from a new benchma
 | [Fixtures](docs/fixtures.md) | Captured log provenance and independently calculated acceptance cases |
 | [Configuration](docs/configuration.md) | User controls, defaults, validation, selection rules, and output behavior |
 | [Output examples](docs/output-examples.md) | Expected rendered results and the configuration choices that produce them |
+| [Generator action](docs/report-action.md) | Action inputs/outputs, binary installation, full artifact upload, and PR workflow |
 | [History](docs/history.md) | Tested external action pin, primary-branch workflow, Pages prerequisites, and integration checks |
 | [Publication](docs/publication.md) | Implemented action inputs, dependency pin, event handling, permissions, and comment migration |
 | [Implementation plan](docs/implementation-plan.md) | Ordered delivery stages, definitions of done, reviewer acceptance criteria, and release evidence |

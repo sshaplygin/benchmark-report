@@ -1,0 +1,6 @@
+{
+  "parser": "go",
+  "base-manifest": "inputs/base.json",
+  "head-manifest": "inputs/head.json",
+  "comment-header": "benchmark-report-go"
+}

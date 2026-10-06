@@ -167,7 +167,10 @@
               "comparison",
               "markdown",
               "presentation",
-              "statistics"
+              "statistics",
+              "comment",
+              "history_smaller",
+              "history_bigger"
             ]
           }
         },
@@ -302,6 +305,29 @@
       "required": [
         "render"
       ]
+    },
+    "report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parser",
+        "comment_header",
+        "artifact_url"
+      ],
+      "properties": {
+        "parser": {
+          "enum": [
+            "go",
+            "criterion"
+          ]
+        },
+        "comment_header": {
+          "type": "string"
+        },
+        "artifact_url": {
+          "type": "string"
+        }
+      }
     }
   },
   "required": [

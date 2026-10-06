@@ -11,7 +11,7 @@ var files embed.FS
 
 func Read(name string) ([]byte, error) {
 	switch name {
-	case "input-manifest", "normalized-run", "comparison", "presentation", "reproduction", "configuration":
+	case "report-result", "report-action-inputs", "report-action-outputs", "input-manifest", "normalized-run", "comparison", "presentation", "reproduction", "configuration":
 		return files.ReadFile(name + ".schema.json")
 	default:
 		return nil, fmt.Errorf("unknown schema %q", name)
