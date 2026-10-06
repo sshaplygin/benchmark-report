@@ -11,7 +11,7 @@ Both proposals pin the generator and publisher to `d64cc0a04a3ceba58f2492a3cf87b
 
 ## Rollout prerequisites
 
-1. Complete release review, select the project license, and obtain authorization to publish the binary assets required by the [installer](report-action.md).
+1. Complete release review and obtain authorization to publish the binary assets required by the [installer](report-action.md).
 2. Obtain authorization to open consumer PRs, execute their workflows, and publish trial comments. The prepared patches and local checks do not perform those actions.
 3. Recheck each consumer's current base, apply its patch in a clean checkout, and run its documented checks. If upstream changed, review the resulting diff again before opening its PR.
 4. Run each consumer workflow twice on an eligible same-repository PR. Inspect the full artifact and summary, then confirm the second publication updates the comment with the selected header. Confirm fork and Dependabot runs retain reports without attempting comment publication.

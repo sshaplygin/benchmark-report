@@ -138,3 +138,7 @@ Reproducing a saved report does not promise identical timings from a new benchma
 | [Example configuration](examples/benchmark-report.json) | A complete consumer configuration using the version 1 interface |
 
 Requirements are defined in their owning document. The implementation plan links to those contracts instead of redefining them. Interface changes must update the owning document and its examples together.
+
+## License
+
+Benchmark Report is licensed under the [Mozilla Public License 2.0](LICENSE). Bundled dependencies retain their own licenses and notices, included in release archives.

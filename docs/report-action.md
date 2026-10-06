@@ -42,6 +42,6 @@ The development packager builds one native platform archive:
 go run ./cmd/package --output-dir dist
 ```
 
-Archives contain both executables, version/platform metadata, checksums for members, and the license texts and notices of their dependencies. Without a project `LICENSE`, candidate archives contain `PROJECT-LICENSE-STATUS.txt`. `go run ./cmd/package --release --output-dir dist` rejects that state; choosing a project license and authorizing publication remain separate requirements. No packaging command publishes a release.
+Archives contain both executables, version/platform metadata, checksums for members, the project's [MPL-2.0 license](../LICENSE), and the license texts and notices of their dependencies. `go run ./cmd/package --release --output-dir dist` requires a nonempty project `LICENSE` and marks the archive as a release artifact. Publication requires separate authorization; no packaging command publishes a release.
 
 CI runs native archive installation and captured-consumer replay on `ubuntu-24.04`, `ubuntu-24.04-arm`, `macos-14`, and `macos-15-intel`. These labels cover both architectures according to the [GitHub runner reference](https://docs.github.com/en/actions/reference/runners/github-hosted-runners). Test harnesses use Go and Python on the build side; runtime checks reject attempts by the installer or generator wrapper to invoke them.
