@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/unicode/norm"
 	"io"
 	"math/big"
 	"os"
@@ -306,8 +308,8 @@ func documentRules(x map[string]any) error {
 			if v == nil {
 				return nil
 			}
-			n := v.(string)
-			if n == "reproduction.json" || strings.HasPrefix(n, "reproduction.json/") || n == "replay-inputs" || strings.HasPrefix(n, "replay-inputs/") {
+			n := norm.NFC.String(cases.Fold().String(v.(string)))
+			if n == "reproduction.json" || strings.HasPrefix(n, "reproduction.json/") || n == "replay-inputs" || strings.HasPrefix(n, "replay-inputs/") || n == "replayed" || strings.HasPrefix(n, "replayed/") {
 				return fmt.Errorf("outputs: reserved reproduction path %q", n)
 			}
 			if names[n] {

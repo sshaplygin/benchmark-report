@@ -1,15 +1,21 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/sshaplygin/benchmark-report/internal/adapters/criterion"
 	"github.com/sshaplygin/benchmark-report/internal/adapters/gobench"
 	"github.com/sshaplygin/benchmark-report/internal/compare"
 	"github.com/sshaplygin/benchmark-report/internal/config"
+	"github.com/sshaplygin/benchmark-report/internal/contracts"
 	"github.com/sshaplygin/benchmark-report/internal/input"
 	"github.com/sshaplygin/benchmark-report/internal/model"
+	"github.com/sshaplygin/benchmark-report/internal/output"
+	"github.com/sshaplygin/benchmark-report/internal/render"
+	"github.com/sshaplygin/benchmark-report/internal/reproduction"
 	"github.com/sshaplygin/benchmark-report/internal/statistics"
+	"github.com/sshaplygin/benchmark-report/schemas"
 	"io"
 	"os"
 	"path/filepath"
@@ -21,6 +27,7 @@ const help = `benchreport normalizes and compares recorded benchmarks offline.
 Usage:
   benchreport normalize --parser go|criterion --manifest FILE --out FILE
   benchreport compare --base FILE --head FILE [--config FILE] --out FILE [--allow-environment-mismatch] [--benchstat-path FILE]
+  benchreport render --input FILE [--config FILE] --output-dir DIR [--reproduction FILE]
   benchreport config validate --config FILE
   benchreport --version
   benchreport --help
@@ -42,6 +49,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stdout, "benchreport %s\n", version)
 			return 0
 		}
+	}
+	if args[0] == "render" {
+		return runRender(args[1:], stdout, stderr)
 	}
 	if args[0] == "compare" {
 		return runCompare(args[1:], stdout, stderr)
@@ -244,6 +254,98 @@ func runCompare(args []string, stdout, stderr io.Writer) int {
 	}
 	if artifact.Gate == "failed" {
 		return 2
+	}
+	return 0
+}
+
+func runRender(args []string, stdout, stderr io.Writer) int {
+	if len(args) == 1 && args[0] == "--version" {
+		fmt.Fprintf(stdout, "benchreport %s\n", version)
+		return 0
+	}
+	flags := flag.NewFlagSet("render", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	flags.Usage = func() {
+		fmt.Fprintln(stdout, "Usage: benchreport render --input FILE [--config FILE] --output-dir DIR [--reproduction FILE]")
+	}
+	path := flags.String("input", "", "complete comparison artifact")
+	configPath := flags.String("config", "", "optional version 1 configuration")
+	directory := flags.String("output-dir", "", "output bundle directory")
+	replayPath := flags.String("reproduction", "", "verify existing bundle before rendering")
+	if code := parseFlags(flags, args); code >= 0 {
+		return code
+	}
+	if *path == "" || *directory == "" || flags.NArg() != 0 || explicitEmpty(flags, "config", *configPath) || explicitEmpty(flags, "reproduction", *replayPath) || *replayPath != "" && *configPath == "" {
+		fmt.Fprintln(stderr, "render requires --input, --output-dir and nonempty supplied paths; --reproduction requires --config")
+		return 1
+	}
+	protected := []string{*path}
+	if *configPath != "" {
+		protected = append(protected, *configPath)
+	}
+	var comparisonBytes []byte
+	var cfg config.Config
+	var err error
+	if *replayPath != "" {
+		_, inventory, snapshots, e := reproduction.ValidateSnapshot(*replayPath, *path, *configPath, version)
+		if e != nil {
+			fmt.Fprintln(stderr, e)
+			return 1
+		}
+		protected = append(protected, inventory...)
+		comparisonBytes = snapshots["comparison"]
+		cfg, err = config.Parse(snapshots["configuration"])
+	} else {
+		comparisonBytes, err = os.ReadFile(*path)
+		if err == nil {
+			cfg, err = config.Load(*configPath)
+		}
+	}
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	c, err := input.ParseComparison(comparisonBytes)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	if !config.PolicyEqual(c.Policy, cfg.Comparison) {
+		fmt.Fprintln(stderr, "render configuration comparison policy differs from recorded policy")
+		return 1
+	}
+	presentation, markdown, err := render.Build(c, cfg)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	entries := []output.Entry{}
+	if cfg.Outputs.Markdown != nil {
+		entries = append(entries, output.Entry{Path: *cfg.Outputs.Markdown, Data: markdown})
+	}
+	if cfg.Outputs.JSON != nil {
+		data, e := json.MarshalIndent(presentation, "", "  ")
+		if e == nil {
+			schema, e2 := schemas.Read("presentation")
+			e = e2
+			if e == nil {
+				e = contracts.ValidateSchema(schema, data)
+			}
+		}
+		if e != nil {
+			fmt.Fprintln(stderr, e)
+			return 1
+		}
+		entries = append(entries, output.Entry{Path: *cfg.Outputs.JSON, Data: append(data, '\n')})
+	}
+	entries, err = reproduction.Build(c, cfg, comparisonBytes, entries, version)
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
+	}
+	if err = output.Commit(*directory, entries, protected); err != nil {
+		fmt.Fprintln(stderr, err)
+		return 1
 	}
 	return 0
 }

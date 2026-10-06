@@ -40,7 +40,7 @@ func TestDecimalPolicyEquality(t *testing.T) {
 	}
 }
 func TestInvalid(t *testing.T) {
-	for _, raw := range []string{`{"schema_version":1,"schema_version":1}`, `{"schema_version":1,"report":{"include":["["]}}`, `{"schema_version":1,"comparison":{"regression_percent":0}}`, `{"schema_version":1,"comparison":{"improvement_percent":-1}}`, `{"schema_version":1,"comparison":{"regression_percent":"20"}}`, `{"schema_version":1,"comparison":{"percent_decimals":5}}`, `{"schema_version":1,"report":{"metrics":["time","bytes"]}}`, `{"schema_version":1,"report":{"sections":{"benchstat":true}}}`, `{"schema_version":1,"outputs":{"markdown":null,"json":null}}`, `{"schema_version":1,"outputs":{"markdown":"report.json"}}`, `{"schema_version":1,"report":{"unknown":true}}`, `{"schema_version":1,"history":{"enabled":true,"smaller_file":"report.md"}}`} {
+	for _, raw := range []string{`{"schema_version":1,"schema_version":1}`, `{"schema_version":1,"report":{"include":["["]}}`, `{"schema_version":1,"comparison":{"regression_percent":0}}`, `{"schema_version":1,"comparison":{"improvement_percent":-1}}`, `{"schema_version":1,"comparison":{"regression_percent":"20"}}`, `{"schema_version":1,"comparison":{"percent_decimals":5}}`, `{"schema_version":1,"report":{"metrics":["time","bytes"]}}`, `{"schema_version":1,"report":{"sections":{"benchstat":true}}}`, `{"schema_version":1,"outputs":{"markdown":null,"json":null}}`, `{"schema_version":1,"outputs":{"markdown":"report.json"}}`, `{"schema_version":1,"outputs":{"markdown":"replayed"}}`, `{"schema_version":1,"report":{"unknown":true}}`, `{"schema_version":1,"history":{"enabled":true,"smaller_file":"report.md"}}`} {
 		if _, err := Parse([]byte(raw)); err == nil {
 			t.Fatal("accepted", raw)
 		}

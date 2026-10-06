@@ -1,6 +1,6 @@
 # Output examples
 
-These examples show the proposed output of Benchmark Report. All measurements, revisions, and environments below are synthetic. They are design examples, not results from either consumer repository or output from a released binary.
+These Markdown examples are checked against the renderer goldens. Their measurements, revisions, and environments are synthetic. Reports from captured consumer logs are available in the [Go golden](../internal/render/testdata/golden/captured-go.md) and [Criterion golden](../internal/render/testdata/golden/captured-criterion.md); their provenance is recorded in [Fixtures](fixtures.md). The CLI has not been released.
 
 Each configuration block is a complete configuration with unspecified fields taking their [documented defaults](configuration.md). The calculation rules remain in [Architecture](architecture.md#comparison). The examples do not define additional settings or output schemas.
 
@@ -24,11 +24,15 @@ Expected `report.md` rendering:
 
 Base `111111111111` → PR `222222222222`
 
-Suite: `go`. Environment: Linux amd64, runner `benchmark-demo`, Go 1.25.0 for both revisions. Both revisions ran on the same runner. Values are medians of repeated measurements.
+Environment: linux amd64, runner benchmark-demo, toolchain go1.25.0 for both revisions.
+
+Go values are medians of repeated measurements.
 
 **6 of 9 measurements selected · 1 regression · 1 improvement · 1 below threshold · 3 not comparable**
 
-Time is lower-is-better. Signals use a 20% advisory threshold and are not statistical significance tests.
+Time is lower-is-better.
+
+Advisory thresholds: 20% regression, 20% improvement. No statistical analysis was requested.
 
 #### example.org/socket/engineio/packet
 
@@ -74,9 +78,11 @@ Expected rendering:
 
 **6 of 9 measurements selected · 1 regression · 1 improvement · 1 below threshold · 3 not comparable**
 
-Showing 2 of 6 selected measurements; 4 omitted by the configured row limit.
+Time is lower-is-better.
 
-Time is lower-is-better. Signals use a 20% advisory threshold and are not statistical significance tests.
+Advisory thresholds: 20% regression, 20% improvement. No statistical analysis was requested.
+
+Showing 2 of 6 selected measurements; 4 omitted by the configured row limit.
 
 #### example.org/socket/engineio/packet
 
@@ -89,8 +95,6 @@ Time is lower-is-better. Signals use a 20% advisory threshold and are not statis
 | Benchmark | Change | Signal |
 | --- | ---: | --- |
 | B64Decoder-4 | +5.0% | ℹ️ below threshold |
-
-The improvement is outside the row limit because the configured ordering places below-threshold rows before improvements. Summary counts still cover all selected measurements. The full comparison artifact retains all nine identities.
 
 ## Allocation and throughput report
 
@@ -116,13 +120,15 @@ Expected rendering:
 
 **3 of 9 measurements selected · 0 regressions · 2 improvements · 0 below threshold · 1 not comparable**
 
-Signals use a 20% advisory threshold and are not statistical significance tests.
+Allocations are lower-is-better.
+
+Throughput is higher-is-better.
+
+Advisory thresholds: 20% regression, 20% improvement. No statistical analysis was requested.
 
 #### example.org/socket/engineio/packet
 
 ##### Allocations
-
-Lower is better.
 
 | Benchmark | Base | PR | Change | Signal |
 | --- | ---: | ---: | ---: | --- |
@@ -132,8 +138,6 @@ Lower is better.
 #### example.org/socket/engineio/payload
 
 ##### Throughput
-
-Higher is better.
 
 | Benchmark | Base | PR | Change | Signal |
 | --- | ---: | ---: | ---: | --- |
@@ -160,11 +164,15 @@ Expected rendering:
 
 Base `333333333333` → PR `444444444444`
 
-Environment: Linux amd64, runner class `benchmark-demo`, Rust 1.90.0 for both revisions. Each suite's base and PR ran on the same runner. Values are Criterion point estimates.
+Environment: linux amd64, runner benchmark-demo, toolchain rust1.90.0 for both revisions.
+
+Criterion values are point estimates; sample counts are unavailable.
 
 **4 of 4 measurements selected · 1 regression · 1 improvement · 2 below threshold · 0 not comparable**
 
-Time is lower-is-better. Signals use a 20% advisory threshold. Statistical significance between these runs was not evaluated.
+Time is lower-is-better.
+
+Advisory thresholds: 20% regression, 20% improvement. No statistical analysis was requested.
 
 #### client
 
@@ -192,7 +200,7 @@ Time is lower-is-better. Signals use a 20% advisory threshold. Statistical signi
 
 ## History JSON
 
-For this export example, the Go head measurements above are treated as a completed primary-branch run. The configuration selects two measurements for a small history example; selection is independent of the Markdown profiles above.
+History export is planned for stage 5. For this export example, the Go head measurements above are treated as a completed primary-branch run. The configuration selects two measurements for a small history example; selection is independent of the Markdown profiles above.
 
 ```json
 {
@@ -241,6 +249,8 @@ Applying `report.include: ["does-not-exist"]` to the Go example is a valid displ
 ### Benchmark comparison
 
 **0 of 9 measurements selected**
+
+Advisory thresholds: 20% regression, 20% improvement. No statistical analysis was requested.
 
 No measurements match the report selection. The comparison contains 9 measurements.
 
