@@ -112,7 +112,7 @@ func validate(path, inputPath, configPath, version string, snapshots map[string]
 	if err != nil {
 		return manifest, nil, err
 	}
-	defer cap.Close()
+	defer func() { _ = cap.Close() }() // Closing a read-only directory does not affect validated bytes.
 	// Validate every lexical path and collision before opening an inventory member.
 	seen := map[string]bool{}
 	for _, file := range manifest.Files {

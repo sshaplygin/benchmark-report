@@ -90,14 +90,14 @@ func transaction(directory string, entries []Entry, remove []string, protected [
 	}
 	defer func() {
 		if err != nil && rootCreated {
-			os.Remove(root)
+			_ = os.Remove(root) // Best effort after a failed transaction.
 		}
 	}()
 	cap, err := os.OpenRoot(root)
 	if err != nil {
 		return err
 	}
-	defer cap.Close()
+	defer func() { _ = cap.Close() }() // Data file writes and closes are checked separately.
 	relative := func(path string) string { rel, _ := filepath.Rel(root, path); return rel }
 	if rename == nil {
 		rename = func(a, b string) error { return cap.Rename(relative(a), relative(b)) }
@@ -170,7 +170,7 @@ func transaction(directory string, entries []Entry, remove []string, protected [
 	keepRecovery := false
 	defer func() {
 		if !keepRecovery {
-			cap.RemoveAll(relative(stage))
+			_ = cap.RemoveAll(relative(stage)) // Best effort once recovery files are no longer needed.
 		}
 	}()
 	// Prepare all bytes before moving any existing destination.
@@ -212,7 +212,7 @@ func transaction(directory string, entries []Entry, remove []string, protected [
 			}
 		}
 		for i := len(created) - 1; i >= 0; i-- {
-			cap.Remove(relative(created[i]))
+			_ = cap.Remove(relative(created[i])) // Empty directory cleanup preserves the original failure.
 		}
 		if len(failures) > 1 {
 			keepRecovery = true

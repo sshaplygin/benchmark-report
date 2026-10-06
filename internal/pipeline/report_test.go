@@ -47,13 +47,17 @@ func TestFullReplayAndTampering(t *testing.T) {
 				if file.Role == "raw" {
 					raw, _ := os.ReadFile(filepath.Join(moved, file.Path))
 					raw = append(raw, []byte("\nBenchmarkBroken 0 1 ns/op\n")...)
-					os.WriteFile(filepath.Join(moved, file.Path), raw, 0600)
+					if err = os.WriteFile(filepath.Join(moved, file.Path), raw, 0600); err != nil {
+						t.Fatal(err)
+					}
 					m.Files[i].SHA256 = fmt.Sprintf("%x", sha256.Sum256(raw))
 					break
 				}
 			}
 			bytes, _ = json.Marshal(m)
-			os.WriteFile(filepath.Join(moved, "reproduction.json"), bytes, 0600)
+			if err = os.WriteFile(filepath.Join(moved, "reproduction.json"), bytes, 0600); err != nil {
+				t.Fatal(err)
+			}
 			bad := filepath.Join(t.TempDir(), "bad")
 			if _, err = Replay(filepath.Join(moved, "reproduction.json"), bad, "", "test"); err == nil {
 				t.Fatal("accepted modified raw evidence")

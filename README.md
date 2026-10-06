@@ -120,6 +120,10 @@ The command writes nonempty direction groups and prints their paths as JSON. His
 
 Reproducing a saved report does not promise identical timings from a new benchmark run.
 
+## Development checks
+
+Run `go test ./...` and `golangci-lint run ./...` from the repository root. Use the golangci-lint version pinned in [CI](.github/workflows/ci.yml); [.golangci.yml](.golangci.yml) defines the shared local and CI checks.
+
 ## Documentation
 
 | Document | Owns |
