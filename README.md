@@ -132,6 +132,7 @@ Reproducing a saved report does not promise identical timings from a new benchma
 | [Generator action](docs/report-action.md) | Action inputs/outputs, binary installation, full artifact upload, and PR workflow |
 | [History](docs/history.md) | Tested external action pin, primary-branch workflow, Pages prerequisites, and integration checks |
 | [Publication](docs/publication.md) | Implemented action inputs, dependency pin, event handling, permissions, and comment migration |
+| [Consumer migrations](docs/migrations.md) | Proposed consumer patches, rollout prerequisites, and links to verification and rollback |
 | [Implementation plan](docs/implementation-plan.md) | Ordered delivery stages, definitions of done, reviewer acceptance criteria, and release evidence |
 | [Example configuration](examples/benchmark-report.json) | A complete consumer configuration using the proposed interface |
 
