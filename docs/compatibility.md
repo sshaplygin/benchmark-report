@@ -1,6 +1,6 @@
 # Compatibility
 
-This matrix covers version `0.1.0`. The [report action](report-action.md#binary-mapping-and-installation) explains its action-to-binary mapping and runtime prerequisites. Coverage below describes tested formats and platforms, not every version of Go or Criterion.
+This matrix covers version `0.2.0`. The [report action](report-action.md#binary-mapping-and-installation) explains its action-to-binary mapping and runtime prerequisites. Coverage below describes tested formats and platforms, not every version of Go or Criterion.
 
 ## Inputs and documents
 
