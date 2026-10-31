@@ -48,6 +48,7 @@ func Build(comparison model.Comparison, cfg config.Config) (model.Presentation, 
 	if len(metrics) > 1 && !contains(cfg.Report.GroupBy, "metric") && !contains(cfg.Report.Columns, "metric") {
 		return p, nil, fmt.Errorf("multiple selected metrics require metric grouping or column")
 	}
+	collapse := cfg.Report.BelowThreshold == "collapse"
 	sort.Slice(selected, func(i, j int) bool {
 		if cfg.Report.Sort == "regression" && rank(selected[i].Signal) != rank(selected[j].Signal) {
 			return rank(selected[i].Signal) < rank(selected[j].Signal)
@@ -72,7 +73,7 @@ func Build(comparison model.Comparison, cfg config.Config) (model.Presentation, 
 	if err != nil {
 		return p, nil, err
 	}
-	selected = selected[:limit]
+	selected = limitRows(selected, limit, collapse)
 	p.Summary.Displayed = len(selected)
 	p.Summary.Omitted = p.Summary.Selected - p.Summary.Displayed
 	for _, metric := range []string{"time", "bytes", "allocations", "throughput"} {
@@ -133,7 +134,31 @@ func Build(comparison model.Comparison, cfg config.Config) (model.Presentation, 
 	if sections.Benchstat && (comparison.Policy.Statistics != "benchstat" || len(comparison.Statistics) == 0) {
 		return p, nil, fmt.Errorf("benchstat section requires recorded benchstat analysis")
 	}
-	return p, markdown(p, comparison), nil
+	return p, markdown(p, comparison, collapse), nil
+}
+
+// limitRows keeps the first limit rows in order. When rows are collapsed they
+// are dropped before any visible row, so the limit cannot hide a regression
+// behind below-threshold noise; the surviving rows keep their sorted order.
+func limitRows(rows []model.ComparisonRow, limit int, collapse bool) []model.ComparisonRow {
+	if !collapse || limit >= len(rows) {
+		return rows[:limit]
+	}
+	keep := make(map[string]bool, limit)
+	for _, folded := range []bool{false, true} {
+		for _, row := range rows {
+			if len(keep) < limit && collapsedRow(collapse, row.Signal) == folded {
+				keep[row.Key] = true
+			}
+		}
+	}
+	kept := make([]model.ComparisonRow, 0, limit)
+	for _, row := range rows {
+		if keep[row.Key] {
+			kept = append(kept, row)
+		}
+	}
+	return kept
 }
 func patterns(values []string) ([]*regexp.Regexp, error) {
 	result := []*regexp.Regexp{}

@@ -18,18 +18,19 @@ type Sections struct {
 	Benchstat bool `json:"benchstat"`
 }
 type Report struct {
-	Title     string      `json:"title"`
-	Metrics   []string    `json:"metrics"`
-	Include   []string    `json:"include"`
-	Exclude   []string    `json:"exclude"`
-	GroupBy   []string    `json:"group_by"`
-	Columns   []string    `json:"columns"`
-	Sort      string      `json:"sort"`
-	Unchanged string      `json:"unchanged"`
-	Missing   string      `json:"missing"`
-	MaxRows   json.Number `json:"max_rows"`
-	Units     string      `json:"units"`
-	Sections  Sections    `json:"sections"`
+	Title          string      `json:"title"`
+	Metrics        []string    `json:"metrics"`
+	Include        []string    `json:"include"`
+	Exclude        []string    `json:"exclude"`
+	GroupBy        []string    `json:"group_by"`
+	Columns        []string    `json:"columns"`
+	Sort           string      `json:"sort"`
+	Unchanged      string      `json:"unchanged"`
+	Missing        string      `json:"missing"`
+	BelowThreshold string      `json:"below_threshold"`
+	MaxRows        json.Number `json:"max_rows"`
+	Units          string      `json:"units"`
+	Sections       Sections    `json:"sections"`
 }
 type Outputs struct {
 	Markdown *string `json:"markdown"`
@@ -53,7 +54,7 @@ type Config struct {
 
 func Defaults() Config {
 	markdown, js := "report.md", "report.json"
-	return Config{SchemaVersion: 1, Comparison: model.Policy{RegressionPercent: json.Number("20"), ImprovementPercent: json.Number("20"), PercentDecimals: 1, Statistics: "none"}, Report: Report{Title: "Benchmark comparison", Metrics: []string{"time"}, Include: []string{}, Exclude: []string{}, GroupBy: []string{"suite", "package"}, Columns: []string{"benchmark", "base", "head", "change", "signal"}, Sort: "name", Unchanged: "show", Missing: "show", Units: "auto", MaxRows: json.Number("0"), Sections: Sections{Metadata: true, Summary: true, Tables: true}}, Outputs: Outputs{Markdown: &markdown, JSON: &js}, History: History{Metrics: []string{"time"}, Include: []string{}, Exclude: []string{}, SmallerFile: "benchmark-smaller.json", BiggerFile: "benchmark-bigger.json"}}
+	return Config{SchemaVersion: 1, Comparison: model.Policy{RegressionPercent: json.Number("20"), ImprovementPercent: json.Number("20"), PercentDecimals: 1, Statistics: "none"}, Report: Report{Title: "Benchmark comparison", Metrics: []string{"time"}, Include: []string{}, Exclude: []string{}, GroupBy: []string{"suite", "package"}, Columns: []string{"benchmark", "base", "head", "change", "signal"}, Sort: "name", Unchanged: "show", Missing: "show", BelowThreshold: "show", Units: "auto", MaxRows: json.Number("0"), Sections: Sections{Metadata: true, Summary: true, Tables: true}}, Outputs: Outputs{Markdown: &markdown, JSON: &js}, History: History{Metrics: []string{"time"}, Include: []string{}, Exclude: []string{}, SmallerFile: "benchmark-smaller.json", BiggerFile: "benchmark-bigger.json"}}
 }
 
 // Load uses defaults only when path is omitted; explicit callers validate empty paths themselves.

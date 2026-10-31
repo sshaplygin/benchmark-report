@@ -123,6 +123,12 @@
             "hide"
           ]
         },
+        "below_threshold": {
+          "enum": [
+            "show",
+            "collapse"
+          ]
+        },
         "max_rows": {
           "type": "integer",
           "minimum": 0

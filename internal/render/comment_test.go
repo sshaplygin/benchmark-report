@@ -281,3 +281,29 @@ func TestCommentRegressionPrefixBeforeGrouping(t *testing.T) {
 		t.Fatal("classification counts changed")
 	}
 }
+func TestCommentBudgetDropsCollapsedRowsFirst(t *testing.T) {
+	c := largeRows(20, 4000)
+	cfg := config.Defaults()
+	cfg.Report.GroupBy = []string{"suite"}
+	cfg.Report.BelowThreshold = "collapse"
+	for i := range c.Rows {
+		if i%2 != 0 {
+			c.Rows[i].Signal = "below_threshold"
+		}
+	}
+	body, err := Comment(c, cfg, "collapsed", "https://example.org/full")
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkCommentBudget(t, body, "collapsed")
+	shown := omissionCounts(t, body)[0]
+	if shown == 0 || shown >= 10 {
+		t.Fatalf("budget must cut inside the ten visible rows, shown %d", shown)
+	}
+	for i := 0; i < 20; i++ {
+		want := i%2 == 0 && i/2 < shown
+		if got := strings.Contains(string(body), fmt.Sprintf("| Row%05d", i)); got != want {
+			t.Fatalf("row %d present=%v want %v", i, got, want)
+		}
+	}
+}

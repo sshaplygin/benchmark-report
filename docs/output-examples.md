@@ -96,6 +96,63 @@ Showing 2 of 6 selected measurements; 4 omitted by the configured row limit.
 | --- | ---: | --- |
 | B64Decoder-4 | +5.0% | ℹ️ below threshold |
 
+## Collapsed report
+
+This configuration renders the same Go timings but folds below-threshold rows into an expandable block. The regression, the improvement, and the added, removed, and zero-baseline rows stay visible. The summary counts still include the folded row.
+
+```json
+{
+  "schema_version": 1,
+  "report": {
+    "title": "Go benchmarks: base vs PR",
+    "group_by": ["package"],
+    "below_threshold": "collapse"
+  }
+}
+```
+
+Expected rendering:
+
+### Go benchmarks: base vs PR
+
+Base `111111111111` → PR `222222222222`
+
+Environment: linux amd64, runner benchmark-demo, toolchain go1.25.0 for both revisions.
+
+Go values are medians of repeated measurements.
+
+**6 of 9 measurements selected · 1 regression · 1 improvement · 1 below threshold · 3 not comparable**
+
+Time is lower-is-better.
+
+Advisory thresholds: 20% regression, 20% improvement. No statistical analysis was requested.
+
+#### example.org/socket/engineio/packet
+
+| Benchmark | Base | PR | Change | Signal |
+| --- | ---: | ---: | ---: | --- |
+| Decoder-4 | 100 ns | 120 ns | +20.0% | ⚠️ regression |
+| Encoder-4 | 80 ns | 60 ns | -25.0% | ✅ improved |
+
+#### example.org/socket/engineio/payload
+
+| Benchmark | Base | PR | Change | Signal |
+| --- | ---: | ---: | ---: | --- |
+| NewDecoder-4 | — | 900 ns | — | added |
+| RemovedDecoder-4 | 700 ns | — | — | removed |
+| ZeroBaseline-4 | 0 ns | 5 ns | — | zero baseline |
+
+<details>
+<summary>1 measurement below threshold</summary>
+
+#### example.org/socket/engineio/payload
+
+| Benchmark | Base | PR | Change | Signal |
+| --- | ---: | ---: | ---: | --- |
+| B64Decoder-4 | 2 µs | 2.1 µs | +5.0% | ℹ️ below threshold |
+
+</details>
+
 ## Allocation and throughput report
 
 This configuration selects the other three measurements from the same Go run. Separate metric sections expose the opposite improvement directions.

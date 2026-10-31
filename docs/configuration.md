@@ -37,12 +37,17 @@ The exact comparison and zero-baseline behavior is defined in [Architecture](arc
 | `report.sort` | `"name"` | `name` or `regression`; the latter orders regressions, below-threshold rows, improvements, then non-comparable rows, with full identity as tie-break |
 | `report.unchanged` | `"show"` | `show` or `hide`; unchanged means equal estimates, not a rounded zero delta |
 | `report.missing` | `"show"` | `show` or `hide`; affects added and removed rows |
-| `report.max_rows` | `0` | Nonnegative integer; zero means no user limit, otherwise a global limit after sorting |
+| `report.below_threshold` | `"show"` | `show` or `collapse`; `collapse` renders `below_threshold` rows in one expandable `details` block after the tables |
+| `report.max_rows` | `0` | Nonnegative integer; zero means no user limit, otherwise a global limit after sorting; with `below_threshold: "collapse"` collapsed rows are dropped first |
 | `report.units` | `"auto"` | `auto` or `canonical`; auto uses one readable unit for both values in each row |
 
 Filters use Go regular expressions and case-sensitive matching against the complete [canonical key](contracts.md#exact-values-and-identities).
 
 Apply selection in this order: metrics, include, exclude, unchanged/missing visibility, sort, row limit, grouping. Summary counts describe selected rows before the row limit and display the selected/total measurement counts. A row limit shows how many selected rows were omitted. A report with no selected rows says so and still records total input counts. Filtering does not create an empty-input success during normalization.
+
+Collapsing changes how rows are laid out, not what is selected. Regressions, improvements, and rows that are not comparable (added, removed, zero baseline) always stay in the visible tables, and the signal counts in the summary are unchanged. The `details` block repeats the group headings of the rows it contains and states how many measurements it holds, as "N of M" when a row limit or the comment budget cut some; it is omitted when no row qualifies. Without a row limit, `report.json` keeps every selected row in its usual order.
+
+With `report.max_rows` set, collapsed rows are dropped before any visible row, so the limit chooses which rows survive differently than the plain sort order does. This applies to both `report.md` and `report.json`, and the kept rows retain their sorted order. Unlike `unchanged: "hide"`, which removes rows whose estimates are exactly equal, collapsing keeps below-threshold rows in the report.
 
 When `metric` is absent from both grouping and columns, more than one selected metric is invalid. Empty package groups are omitted for Criterion. If a source does not provide a sample count, render an em dash rather than inventing one.
 
@@ -78,6 +83,6 @@ Display precision and report titles do not change exported measurements. [Histor
 
 ## Example profiles
 
-Use the checked-in example for Go timing tables and full benchstat details. For Criterion, set `comparison.statistics` to `none` and `report.sections.benchstat` to false. For a machine-readable-only report, set `outputs.markdown` to null. For allocation analysis, select `allocations` and `bytes` and include `metric` in grouping or columns.
+Use the checked-in example for Go timing tables and full benchstat details. For Criterion, set `comparison.statistics` to `none` and `report.sections.benchstat` to false. For a machine-readable-only report, set `outputs.markdown` to null. To keep a large report short, set `report.below_threshold` to `collapse` so only measurements that crossed a threshold or have no comparable pair are shown by default. For allocation analysis, select `allocations` and `bytes` and include `metric` in grouping or columns.
 
 Comment header and artifact URL are operational [CLI inputs](contracts.md#full-report-and-calculation-replay), recorded for replay rather than comparison policy.
