@@ -44,7 +44,11 @@ func Comment(comparison model.Comparison, cfg config.Config, header, artifactURL
 	for _, group := range presentation.Groups {
 		rows = append(rows, group.Rows...)
 	}
+	collapse := cfg.Report.BelowThreshold == "collapse"
 	sort.Slice(rows, func(i, j int) bool {
+		if a, b := collapsedRow(collapse, rows[i].Signal), collapsedRow(collapse, rows[j].Signal); a != b {
+			return b
+		}
 		if cfg.Report.Sort == "regression" && rank(rows[i].Signal) != rank(rows[j].Signal) {
 			return rank(rows[i].Signal) < rank(rows[j].Signal)
 		}
@@ -86,7 +90,7 @@ func Comment(comparison model.Comparison, cfg config.Config, header, artifactURL
 			}
 			p.Disclosures = append(disclosures, fmt.Sprintf("Showing %d of %d selected measurements; %d omitted (%d by the configured row limit, %d by the comment byte budget).", count, p.Summary.Selected, p.Summary.Omitted, configured, len(rows)-count))
 		}
-		body := markdown(p, comparison)
+		body := markdown(p, comparison, collapse)
 		return append(body, []byte("\n[Complete report artifact](<"+link+">)\n")...)
 	}
 	maximum := len(rows)

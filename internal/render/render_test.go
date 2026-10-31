@@ -197,6 +197,110 @@ func TestSyntheticProfiles(t *testing.T) {
 	}
 }
 
+func collapsedConfig() config.Config {
+	cfg := config.Defaults()
+	cfg.Report.Title = "Go benchmarks: base vs PR"
+	cfg.Report.GroupBy = []string{"package"}
+	cfg.Report.BelowThreshold = "collapse"
+	return cfg
+}
+
+func TestCollapseBelowThreshold(t *testing.T) {
+	c := exampleComparison(false)
+	shown, shownMD, err := Build(c, func() config.Config { cfg := collapsedConfig(); cfg.Report.BelowThreshold = "show"; return cfg }())
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, md, err := Build(c, collapsedConfig())
+	if err != nil {
+		t.Fatal(err)
+	}
+	assertPresentation(t, p)
+	golden(t, "collapsed", md)
+	// Without a row limit collapsing is layout only: the presentation model keeps every row.
+	if !reflect.DeepEqual(p, shown) {
+		t.Fatal("collapse changed the presentation model")
+	}
+	text := string(md)
+	open := strings.Index(text, "<details>")
+	if open < 0 || strings.Contains(string(shownMD), "<details>") {
+		t.Fatal("details block must appear only when collapsing")
+	}
+	visible, folded := text[:open], text[open:]
+	for _, name := range []string{"| Decoder-4", "| Encoder-4", "| NewDecoder-4", "| RemovedDecoder-4", "| ZeroBaseline-4"} {
+		if !strings.Contains(visible, name) || strings.Contains(folded, name) {
+			t.Fatalf("%s must stay outside details", name)
+		}
+	}
+	if !strings.Contains(folded, "| B64Decoder-4") || strings.Contains(visible, "| B64Decoder-4") {
+		t.Fatal("below-threshold row must be inside details")
+	}
+	if !strings.Contains(folded, "<summary>1 measurement below threshold</summary>") {
+		t.Fatal(folded)
+	}
+}
+
+func TestCollapseWithoutBelowThresholdRows(t *testing.T) {
+	c := exampleComparison(false)
+	cfg := collapsedConfig()
+	cfg.Report.Include = []string{"Decoder-4$", "Encoder-4$"}
+	_, md, err := Build(c, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(md), "<details>") {
+		t.Fatal("empty details block")
+	}
+}
+
+func TestCollapseRowLimitDropsCollapsedFirst(t *testing.T) {
+	c := exampleComparison(false)
+	cfg := collapsedConfig()
+	cfg.Report.MaxRows = "5"
+	p, _, err := Build(c, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// B64Decoder sorts before NewDecoder by name, yet the limit keeps every visible row.
+	if p.Summary.Displayed != 5 || contains(rowNames(p), "BenchmarkB64Decoder-4") {
+		t.Fatal(rowNames(p))
+	}
+	cfg.Report.BelowThreshold = "show"
+	p, _, err = Build(c, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !contains(rowNames(p), "BenchmarkB64Decoder-4") {
+		t.Fatal("limit order changed without collapse", rowNames(p))
+	}
+}
+
+func TestCollapseLimitedSummaryAndModel(t *testing.T) {
+	c := exampleComparison(true)
+	cfg := collapsedConfig()
+	cfg.Report.GroupBy = []string{"suite"}
+	cfg.Report.MaxRows = "3"
+	p, md, err := Build(c, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Both visible rows plus the first collapsed row survive the limit.
+	if !reflect.DeepEqual(rowNames(p), []string{"rows/decode", "codec/decode", "codec/encode"}) {
+		t.Fatal(rowNames(p))
+	}
+	if !strings.Contains(string(md), "<summary>1 of 2 measurements below threshold</summary>") {
+		t.Fatal(string(md))
+	}
+	cfg.Report.BelowThreshold = "show"
+	p, _, err = Build(c, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reflect.DeepEqual(rowNames(p), []string{"rows/decode", "codec/decode", "codec/encode"}) {
+		t.Fatal("limit must keep the plain sort prefix without collapse")
+	}
+}
+
 func TestSelectionOrderAndImmutability(t *testing.T) {
 	c := exampleComparison(false)
 	original, _ := json.Marshal(c)

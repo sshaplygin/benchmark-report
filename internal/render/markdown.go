@@ -45,7 +45,7 @@ func metricLabel(metric string) string {
 	}
 	return metric
 }
-func markdown(p model.Presentation, comparison model.Comparison) []byte {
+func markdown(p model.Presentation, comparison model.Comparison, collapse bool) []byte {
 	var b strings.Builder
 	fmt.Fprintf(&b, "### %s\n\n", plain(p.Title))
 	if p.Sections.Metadata {
@@ -95,81 +95,19 @@ func markdown(p model.Presentation, comparison model.Comparison) []byte {
 		for _, row := range comparison.Rows {
 			sources[row.Key] = row
 		}
-		previous := []model.PresentationLabel{}
-		for _, group := range p.Groups {
-			for i, label := range group.Labels {
-				samePrefix := i < len(previous)
-				for parent := 0; samePrefix && parent <= i; parent++ {
-					samePrefix = group.Labels[parent] == previous[parent]
-				}
-				if samePrefix {
-					continue
-				}
-				text := label.Value
-				if label.Field == "metric" {
-					text = metricLabel(text)
-				}
-				fmt.Fprintf(&b, "%s %s\n\n", strings.Repeat("#", 4+i), plain(text))
+		shown, folded := splitGroups(p.Groups, collapse)
+		writeTables(&b, p.Columns, shown, sources)
+		if count := rowCount(folded); count > 0 {
+			label := fmt.Sprintf("%d measurements", count)
+			if count == 1 {
+				label = "1 measurement"
 			}
-			previous = group.Labels
-			b.WriteString("|")
-			for _, column := range p.Columns {
-				label := strings.ToUpper(column[:1]) + column[1:]
-				if column == "head" {
-					label = "PR"
-				}
-				if column == "signal" {
-					label = "Signal"
-				}
-				fmt.Fprintf(&b, " %s |", label)
+			if count < p.Summary.BelowThreshold {
+				label = fmt.Sprintf("%d of %d measurements", count, p.Summary.BelowThreshold)
 			}
-			b.WriteString("\n|")
-			for _, column := range p.Columns {
-				align := "---"
-				if column == "base" || column == "head" || column == "change" {
-					align = "---:"
-				}
-				fmt.Fprintf(&b, " %s |", align)
-			}
-			b.WriteByte('\n')
-			for _, row := range group.Rows {
-				source := sources[row.Key]
-				b.WriteString("|")
-				for _, column := range p.Columns {
-					value := ""
-					switch column {
-					case "benchmark":
-						value = row.Identity.Benchmark
-						if source.Definition.Estimator == "median" {
-							value = strings.TrimPrefix(value, "Benchmark")
-						}
-					case "base":
-						value = row.Base
-					case "head":
-						value = row.Head
-					case "change":
-						value = row.Change
-					case "metric":
-						value = metricLabel(row.Identity.Metric)
-					case "samples":
-						value = row.Samples
-					case "signal":
-						switch row.Signal {
-						case "regression":
-							value = "⚠️ regression"
-						case "improvement":
-							value = "✅ improved"
-						case "below_threshold":
-							value = "ℹ️ below threshold"
-						case "not_comparable":
-							value = strings.ReplaceAll(source.Reason, "_", " ")
-						}
-					}
-					fmt.Fprintf(&b, " %s |", plain(value))
-				}
-				b.WriteByte('\n')
-			}
-			b.WriteByte('\n')
+			fmt.Fprintf(&b, "<details>\n<summary>%s below threshold</summary>\n\n", label)
+			writeTables(&b, p.Columns, folded, sources)
+			b.WriteString("</details>\n\n")
 		}
 	}
 	if p.Sections.Benchstat {
@@ -188,6 +126,123 @@ func markdown(p model.Presentation, comparison model.Comparison) []byte {
 		}
 	}
 	return []byte(strings.TrimRight(b.String(), "\n") + "\n")
+}
+
+// collapsedRow reports whether a row goes under the details block. Only
+// below-threshold rows qualify: regressions, improvements, and rows without a
+// comparable pair always stay in the visible tables.
+func collapsedRow(collapse bool, signal string) bool {
+	return collapse && signal == "below_threshold"
+}
+
+// splitGroups keeps group order and labels in both halves; a group with no rows
+// on one side is absent from that side.
+func splitGroups(groups []model.PresentationGroup, collapse bool) (shown, folded []model.PresentationGroup) {
+	for _, group := range groups {
+		visible := model.PresentationGroup{Labels: group.Labels, Rows: []model.PresentationRow{}}
+		hidden := model.PresentationGroup{Labels: group.Labels, Rows: []model.PresentationRow{}}
+		for _, row := range group.Rows {
+			if collapsedRow(collapse, row.Signal) {
+				hidden.Rows = append(hidden.Rows, row)
+			} else {
+				visible.Rows = append(visible.Rows, row)
+			}
+		}
+		if len(visible.Rows) > 0 {
+			shown = append(shown, visible)
+		}
+		if len(hidden.Rows) > 0 {
+			folded = append(folded, hidden)
+		}
+	}
+	return shown, folded
+}
+
+func rowCount(groups []model.PresentationGroup) int {
+	count := 0
+	for _, group := range groups {
+		count += len(group.Rows)
+	}
+	return count
+}
+
+func writeTables(b *strings.Builder, columns []string, groups []model.PresentationGroup, sources map[string]model.ComparisonRow) {
+	previous := []model.PresentationLabel{}
+	for _, group := range groups {
+		for i, label := range group.Labels {
+			samePrefix := i < len(previous)
+			for parent := 0; samePrefix && parent <= i; parent++ {
+				samePrefix = group.Labels[parent] == previous[parent]
+			}
+			if samePrefix {
+				continue
+			}
+			text := label.Value
+			if label.Field == "metric" {
+				text = metricLabel(text)
+			}
+			fmt.Fprintf(b, "%s %s\n\n", strings.Repeat("#", 4+i), plain(text))
+		}
+		previous = group.Labels
+		b.WriteString("|")
+		for _, column := range columns {
+			label := strings.ToUpper(column[:1]) + column[1:]
+			if column == "head" {
+				label = "PR"
+			}
+			if column == "signal" {
+				label = "Signal"
+			}
+			fmt.Fprintf(b, " %s |", label)
+		}
+		b.WriteString("\n|")
+		for _, column := range columns {
+			align := "---"
+			if column == "base" || column == "head" || column == "change" {
+				align = "---:"
+			}
+			fmt.Fprintf(b, " %s |", align)
+		}
+		b.WriteByte('\n')
+		for _, row := range group.Rows {
+			source := sources[row.Key]
+			b.WriteString("|")
+			for _, column := range columns {
+				value := ""
+				switch column {
+				case "benchmark":
+					value = row.Identity.Benchmark
+					if source.Definition.Estimator == "median" {
+						value = strings.TrimPrefix(value, "Benchmark")
+					}
+				case "base":
+					value = row.Base
+				case "head":
+					value = row.Head
+				case "change":
+					value = row.Change
+				case "metric":
+					value = metricLabel(row.Identity.Metric)
+				case "samples":
+					value = row.Samples
+				case "signal":
+					switch row.Signal {
+					case "regression":
+						value = "⚠️ regression"
+					case "improvement":
+						value = "✅ improved"
+					case "below_threshold":
+						value = "ℹ️ below threshold"
+					case "not_comparable":
+						value = strings.ReplaceAll(source.Reason, "_", " ")
+					}
+				}
+				fmt.Fprintf(b, " %s |", plain(value))
+			}
+			b.WriteByte('\n')
+		}
+		b.WriteByte('\n')
+	}
 }
 func fenced(b *strings.Builder, text string) {
 	longest, current := 0, 0
