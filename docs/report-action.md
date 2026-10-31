@@ -30,7 +30,7 @@ The [consumer workflows](../README.md#used-by) show Go and Criterion usage. Foll
 
 ## Binary mapping and installation
 
-[report/VERSION](../report/VERSION) maps the action commit to version `0.1.0`. The installer selects Linux or macOS and amd64 or arm64, downloads `benchreport_VERSION_OS_ARCH.tar.gz` and its `.sha256` file from the matching GitHub release, and verifies the checksum before extraction or execution. It rejects unexpected archive paths, links, duplicate members, unsupported platforms, and archive/binary version mismatches. No fallback version or source build is selected. Benchstat is bundled at the [recorded pin](contracts.md#tools-and-boundaries).
+[report/VERSION](../report/VERSION) maps the action commit to version `0.2.0`. The installer selects Linux or macOS and amd64 or arm64, downloads `benchreport_VERSION_OS_ARCH.tar.gz` and its `.sha256` file from the matching GitHub release, and verifies the checksum before extraction or execution. It rejects unexpected archive paths, links, duplicate members, unsupported platforms, and archive/binary version mismatches. No fallback version or source build is selected. Benchstat is bundled at the [recorded pin](contracts.md#tools-and-boundaries).
 
 Runtime prerequisites are Bash, curl, tar, jq, and either sha256sum or shasum, available on the supported GitHub-hosted runners. No Go or Python installation is needed for generation or publication. The root publisher additionally uses the upstream action's runtime described in [Publication](publication.md#dependency-contract).
 
